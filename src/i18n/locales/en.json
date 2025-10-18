@@ -70,7 +70,10 @@
     "filter": "Filter",
     "export": "Export",
     "print": "Print",
-    "close": "Close"
+    "close": "Close",
+    "dataSources": "Data Sources",
+    "climateRecommendations": "Climate Recommendations",
+    "rainPredictions": "Rain Predictions & Irrigation Advice"
   },
   "farmPlanner": {
     "title": "Comprehensive Farm Planner",

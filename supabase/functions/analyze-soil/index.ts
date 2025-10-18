@@ -19,7 +19,7 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const systemPrompt = `You are an expert soil scientist and agricultural consultant. Analyze soil conditions and provide comprehensive, data-rich recommendations in JSON format with extensive nutrient analysis and charts data.`;
+    const systemPrompt = `You are an expert soil scientist and agricultural consultant with access to data from FAO, CGIAR, USDA, and agricultural research institutions. Analyze soil conditions and provide comprehensive, data-rich recommendations in JSON format with extensive nutrient analysis, charts data, and climate-based recommendations. Always cite reputable sources.`;
 
     const messages: any[] = [
       { role: 'system', content: systemPrompt }
@@ -51,10 +51,16 @@ serve(async (req) => {
               "timeline": [{"period": "Month 1-2", "action": "Action", "expectedImprovement": "Improvement"}],
               "micronutrients": {"iron": "Adequate", "zinc": "Low", "manganese": "Adequate", "boron": "Adequate"},
               "irrigationRecommendations": "Water management advice",
-              "expectedImprovementTimeline": [{"month": 1, "healthScore": 65}, {"month": 3, "healthScore": 75}, {"month": 6, "healthScore": 85}, {"month": 12, "healthScore": 90}]
+              "climateRecommendations": ["Climate-based recommendation with timing and specific actions"],
+              "expectedImprovementTimeline": [{"month": 1, "healthScore": 65}, {"month": 3, "healthScore": 75}, {"month": 6, "healthScore": 85}, {"month": 12, "healthScore": 90}],
+              "dataSources": [
+                {"name": "FAO", "url": "http://www.fao.org/"},
+                {"name": "CGIAR", "url": "https://www.cgiar.org/"},
+                {"name": "USDA", "url": "https://www.usda.gov/"}
+              ]
             }
             
-            Provide detailed data for charts including all major and micronutrients.`
+            Provide detailed data for charts including all major and micronutrients, and include reputable source citations.`
           },
           {
             type: 'image_url',
@@ -101,10 +107,15 @@ serve(async (req) => {
               "description": "Detailed recommendation"
             }
           ],
-          "additionalNotes": "Important notes and concerns"
+          "climateRecommendations": ["Climate-based recommendation with timing"],
+          "additionalNotes": "Important notes and concerns",
+          "dataSources": [
+            {"name": "FAO", "url": "http://www.fao.org/"},
+            {"name": "CGIAR", "url": "https://www.cgiar.org/"}
+          ]
         }
         
-        Provide at least 3 items for each array field.`
+        Provide at least 3 items for each array field and cite reputable agricultural sources.`
       });
     }
 

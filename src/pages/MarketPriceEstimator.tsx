@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Area, AreaChart } from "recharts";
 import { useFarmData } from "@/contexts/FarmDataContext";
 import ToolSuggestions from "@/components/ToolSuggestions";
+import DataSources from "@/components/DataSources";
+import ClimateRecommendations from "@/components/ClimateRecommendations";
 
 const MarketPriceEstimator = () => {
   const [cropType, setCropType] = useState("");
@@ -220,6 +222,36 @@ const MarketPriceEstimator = () => {
                     )}
                   </CardContent>
                 </Card>
+              )}
+
+              {analysis.seasonalClimateImpact && (
+                <Card className="shadow-[var(--shadow-card)] border-primary/20">
+                  <CardHeader>
+                    <CardTitle>Seasonal Climate Impact</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <p className="text-sm font-semibold mb-1">Harvest Season Weather</p>
+                      <p className="text-sm text-muted-foreground">{analysis.seasonalClimateImpact.harvestSeasonWeather}</p>
+                    </div>
+                    {analysis.seasonalClimateImpact.storageConditions && (
+                      <div>
+                        <p className="text-sm font-semibold mb-1">Storage Conditions</p>
+                        <p className="text-sm text-muted-foreground">{analysis.seasonalClimateImpact.storageConditions}</p>
+                      </div>
+                    )}
+                    {analysis.seasonalClimateImpact.transportRecommendations && (
+                      <div>
+                        <p className="text-sm font-semibold mb-1">Transport Recommendations</p>
+                        <p className="text-sm text-muted-foreground">{analysis.seasonalClimateImpact.transportRecommendations}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {analysis.dataSources && (
+                <DataSources sources={analysis.dataSources} />
               )}
 
               <ToolSuggestions currentTool="market" farmData={farmData} />

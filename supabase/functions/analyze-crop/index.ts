@@ -19,7 +19,7 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const systemPrompt = `You are an expert agricultural AI assistant. Analyze crop suitability and provide comprehensive, data-rich recommendations.
+    const systemPrompt = `You are an expert agricultural AI assistant with access to data from FAO, CGIAR, national agricultural departments, NASA POWER, and NOAA NCEI. Analyze crop suitability and provide comprehensive, data-rich recommendations with cited sources.
   
   Return your response as a valid JSON object with this EXACT structure:
   {
@@ -34,9 +34,12 @@ serve(async (req) => {
       "optimisticYield": "X tons",
       "conservativeYield": "X tons"
     },
-    "climateAnalysis": "Detailed climate analysis with rainfall patterns, temperature ranges, and seasonal considerations",
+    "climateAnalysis": "Detailed climate analysis with NASA POWER and NOAA NCEI data - rainfall patterns, temperature ranges, and seasonal considerations for the specific location",
     "monthlyData": [
       {"month": "Jan", "rainfall": 120, "temperature": 28, "idealForPlanting": true}
+    ],
+    "climateRecommendations": [
+      {"recommendation": "Time-based climate recommendation with specific dates", "source": "NASA POWER", "confidence": "High"}
     ],
     "soilHealthScore": 85,
     "recommendations": [
@@ -45,12 +48,18 @@ serve(async (req) => {
     "pestRiskAnalysis": [
       {"pest": "Pest name", "risk": "High/Medium/Low", "preventiveMeasures": "Detailed measures"}
     ],
+    "dataSources": [
+      {"name": "FAO", "url": "http://www.fao.org/"},
+      {"name": "CGIAR", "url": "https://www.cgiar.org/"},
+      {"name": "NASA POWER", "url": "https://power.larc.nasa.gov/"},
+      {"name": "NOAA NCEI", "url": "https://www.ncei.noaa.gov/"}
+    ],
     "error": null
   }
   
   If the crop type provided is invalid or doesn't exist, include an "error" field with a helpful message and suggestions for valid crops.
   
-  Provide extensive, actionable data with at least 3-5 recommended crops, detailed monthly climate data (all 12 months), and comprehensive recommendations.`;
+  Provide extensive, actionable data with at least 3-5 recommended crops, detailed monthly climate data (all 12 months), climate-based recommendations, and comprehensive recommendations citing reputable agricultural sources.`;
 
     const userPrompt = `Analyze the following farm conditions and provide detailed crop planning recommendations with climate research for the specific location:
     

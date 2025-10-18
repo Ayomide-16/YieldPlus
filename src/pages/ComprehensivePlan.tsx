@@ -9,9 +9,12 @@ import LocationSelector from "@/components/LocationSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, Tractor, Save, Plus } from "lucide-react";
+import { Loader2, Tractor, Save, Plus, Calendar, TrendingUp, Sprout, DollarSign } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from "recharts";
+import DataSources from "@/components/DataSources";
+import ClimateRecommendations from "@/components/ClimateRecommendations";
 
 const ComprehensivePlan = () => {
   const { user } = useAuth();
@@ -32,7 +35,8 @@ const ComprehensivePlan = () => {
   const [cropTypes, setCropTypes] = useState("");
   
   // Plan configuration
-  const [season, setSeason] = useState("all-year");
+  const [plantingMonth, setPlantingMonth] = useState("");
+  const [preferredPlantingDate, setPreferredPlantingDate] = useState("");
   const [includeSections, setIncludeSections] = useState({
     crop: true,
     soil: true,
@@ -41,7 +45,15 @@ const ComprehensivePlan = () => {
   });
   
   const [isGenerating, setIsGenerating] = useState(false);
-  const [analysis, setAnalysis] = useState<any>(null);
+  const [plan, setPlan] = useState<any>(null);
+  const [climateData, setClimateData] = useState<any>(null);
+
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
   useEffect(() => {
     if (user) {
@@ -98,83 +110,79 @@ const ComprehensivePlan = () => {
       return;
     }
 
+    if (!plantingMonth || !preferredPlantingDate) {
+      toast({ title: "Missing Information", description: "Please select planting month and date", variant: "destructive" });
+      return;
+    }
+
     const farm = farms.find(f => f.id === selectedFarm);
     if (!farm) return;
 
     setIsGenerating(true);
 
     try {
-      // Gather analyses from all selected sections
-      const analyses: any = {};
-      
-      if (includeSections.crop) {
-        const { data: cropData } = await supabase.functions.invoke('analyze-crop', {
-          body: {
-            location: farm.location,
-            soilType: farm.soil_type,
-            cropType: farm.crops[0],
-            farmSize: farm.total_size
-          }
-        });
-        analyses.crop = cropData?.analysis;
+      // Step 1: Get climate data
+      console.log('Fetching climate data...');
+      const { data: climateResponse, error: climateError } = await supabase.functions.invoke('get-climate-data', {
+        body: {
+          latitude: 6.5244, // Default for Nigeria, should be derived from location
+          longitude: 3.3792,
+          startDate: preferredPlantingDate,
+          endDate: new Date(new Date(preferredPlantingDate).getTime() + 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        }
+      });
+
+      if (climateError) throw climateError;
+
+      let parsedClimate;
+      try {
+        const cleaned = climateResponse.climateData.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        parsedClimate = JSON.parse(cleaned);
+      } catch {
+        parsedClimate = { currentConditions: {}, forecast: {} };
+      }
+      setClimateData(parsedClimate);
+
+      // Step 2: Generate comprehensive plan
+      console.log('Generating comprehensive plan...');
+      const { data: planResponse, error: planError } = await supabase.functions.invoke('generate-comprehensive-plan', {
+        body: {
+          farmData: farm,
+          preferredPlantingDate,
+          climateData: parsedClimate,
+          includeSections
+        }
+      });
+
+      if (planError) throw planError;
+
+      let parsedPlan;
+      try {
+        const cleaned = planResponse.plan.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        parsedPlan = JSON.parse(cleaned);
+      } catch {
+        parsedPlan = { executiveSummary: { overview: planResponse.plan } };
       }
 
-      if (includeSections.soil) {
-        const { data: soilData } = await supabase.functions.invoke('analyze-soil', {
-          body: {
-            color: "brown",
-            texture: farm.soil_type,
-            notes: `Farm: ${farm.farm_name}`
-          }
-        });
-        analyses.soil = soilData?.analysis;
-      }
-
-      if (includeSections.water && season !== "rainy") {
-        const { data: waterData } = await supabase.functions.invoke('analyze-water', {
-          body: {
-            waterSource: farm.water_source,
-            farmSize: farm.total_size,
-            cropTypes: farm.crops,
-            irrigationMethod: farm.irrigation_method
-          }
-        });
-        analyses.water = waterData?.analysis;
-      }
-
-      if (includeSections.market) {
-        const { data: marketData } = await supabase.functions.invoke('estimate-market-price', {
-          body: {
-            cropType: farm.crops[0],
-            expectedYield: farm.total_size * 10,
-            location: farm.location,
-            harvestDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-          }
-        });
-        analyses.market = marketData?.analysis;
-      }
-
-      // Save comprehensive plan
+      // Step 3: Save to database
       const { error: saveError } = await supabase
         .from('comprehensive_plans')
         .insert({
           farm_id: selectedFarm,
           user_id: user?.id,
-          plan_name: `${farm.farm_name} - ${new Date().toLocaleDateString()}`,
-          season: season,
+          plan_name: `${farm.farm_name} - ${plantingMonth} ${new Date().getFullYear()}`,
+          preferred_planting_date: preferredPlantingDate,
           included_sections: includeSections,
-          crop_analysis: analyses.crop,
-          soil_analysis: analyses.soil,
-          water_analysis: analyses.water,
-          market_analysis: analyses.market,
-          comprehensive_summary: analyses
+          climate_data: parsedClimate,
+          comprehensive_summary: parsedPlan
         });
 
       if (saveError) throw saveError;
 
-      setAnalysis(analyses);
-      toast({ title: "Success", description: "Comprehensive plan generated and saved!" });
+      setPlan(parsedPlan);
+      toast({ title: "Success", description: "Comprehensive plan generated successfully!" });
     } catch (error: any) {
+      console.error('Error generating plan:', error);
       toast({ title: "Error", description: error.message || "Failed to generate plan", variant: "destructive" });
     } finally {
       setIsGenerating(false);
@@ -203,18 +211,18 @@ const ComprehensivePlan = () => {
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">
-              Comprehensive Farm Planner
+              {t('farmPlanner.title')}
             </h1>
             <p className="text-muted-foreground">
-              Generate a complete farming plan that integrates all aspects of your farm operations
+              {t('farmPlanner.subtitle')}
             </p>
           </div>
 
           {!showNewFarm && (
-            <Card className="mb-8">
+            <Card className="mb-8 shadow-[var(--shadow-elevated)]">
               <CardHeader>
-                <CardTitle>Select or Create a Farm</CardTitle>
-                <CardDescription>Choose an existing farm or create a new one to generate a comprehensive plan</CardDescription>
+                <CardTitle>{t('farmPlanner.selectFarm')}</CardTitle>
+                <CardDescription>{t('farmPlanner.selectFarmDesc')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -226,28 +234,28 @@ const ComprehensivePlan = () => {
                     <SelectContent>
                       {farms.map(farm => (
                         <SelectItem key={farm.id} value={farm.id}>
-                          {farm.farm_name} - {farm.total_size} plots
+                          {farm.farm_name} - {farm.total_size} hectares
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <Button variant="outline" onClick={() => setShowNewFarm(true)} className="w-full">
-                  <Plus className="mr-2 h-4 w-4" /> Create New Farm
+                  <Plus className="mr-2 h-4 w-4" /> {t('farmPlanner.createNewFarm')}
                 </Button>
               </CardContent>
             </Card>
           )}
 
           {showNewFarm && (
-            <Card className="mb-8">
+            <Card className="mb-8 shadow-[var(--shadow-elevated)]">
               <CardHeader>
-                <CardTitle>Create New Farm</CardTitle>
+                <CardTitle>{t('farmPlanner.createNewFarm')}</CardTitle>
                 <CardDescription>Enter your farm details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label>Farm Name *</Label>
+                  <Label>{t('farmPlanner.farmName')} *</Label>
                   <Input value={farmName} onChange={(e) => setFarmName(e.target.value)} placeholder="My Farm" />
                 </div>
 
@@ -255,11 +263,11 @@ const ComprehensivePlan = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label>Farm Size (plots) *</Label>
+                    <Label>{t('farmPlanner.farmSize')} *</Label>
                     <Input type="number" value={farmSize} onChange={(e) => setFarmSize(e.target.value)} placeholder="10" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Soil Type</Label>
+                    <Label>{t('farmPlanner.soilType')}</Label>
                     <Select value={soilType} onValueChange={setSoilType}>
                       <SelectTrigger><SelectValue placeholder="Select soil type" /></SelectTrigger>
                       <SelectContent>
@@ -274,7 +282,7 @@ const ComprehensivePlan = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label>Water Source</Label>
+                    <Label>{t('farmPlanner.waterSource')}</Label>
                     <Select value={waterSource} onValueChange={setWaterSource}>
                       <SelectTrigger><SelectValue placeholder="Select water source" /></SelectTrigger>
                       <SelectContent>
@@ -286,7 +294,7 @@ const ComprehensivePlan = () => {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Irrigation Method</Label>
+                    <Label>{t('farmPlanner.irrigationMethod')}</Label>
                     <Select value={irrigationMethod} onValueChange={setIrrigationMethod}>
                       <SelectTrigger><SelectValue placeholder="Select method" /></SelectTrigger>
                       <SelectContent>
@@ -300,7 +308,7 @@ const ComprehensivePlan = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Crop Types (comma-separated)</Label>
+                  <Label>{t('farmPlanner.cropTypes')}</Label>
                   <Input value={cropTypes} onChange={(e) => setCropTypes(e.target.value)} placeholder="Maize, Rice, Cassava" />
                 </div>
 
@@ -315,34 +323,47 @@ const ComprehensivePlan = () => {
           )}
 
           {selectedFarm && !showNewFarm && (
-            <Card className="mb-8">
+            <Card className="mb-8 shadow-[var(--shadow-elevated)]">
               <CardHeader>
-                <CardTitle>Plan Configuration</CardTitle>
+                <CardTitle>{t('farmPlanner.configuration')}</CardTitle>
                 <CardDescription>Customize your comprehensive farm plan</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label>Season</Label>
-                  <Select value={season} onValueChange={setSeason}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="rainy">Rainy Season</SelectItem>
-                      <SelectItem value="dry">Dry Season</SelectItem>
-                      <SelectItem value="all-year">All Year</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      {t('farmPlanner.plantingMonth')} *
+                    </Label>
+                    <Select value={plantingMonth} onValueChange={setPlantingMonth}>
+                      <SelectTrigger><SelectValue placeholder="Select month" /></SelectTrigger>
+                      <SelectContent>
+                        {months.map(month => (
+                          <SelectItem key={month} value={month}>{month}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Preferred Planting Date *</Label>
+                    <Input 
+                      type="date" 
+                      value={preferredPlantingDate} 
+                      onChange={(e) => setPreferredPlantingDate(e.target.value)} 
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-3">
-                  <Label>Include in Plan</Label>
-                  <div className="space-y-2">
+                  <Label>{t('farmPlanner.includeSections')}</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="crop"
                         checked={includeSections.crop}
                         onCheckedChange={(checked) => setIncludeSections({...includeSections, crop: !!checked})}
                       />
-                      <Label htmlFor="crop" className="cursor-pointer">Crop Planning & Recommendations</Label>
+                      <Label htmlFor="crop" className="cursor-pointer">{t('farmPlanner.cropPlanning')}</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -350,18 +371,15 @@ const ComprehensivePlan = () => {
                         checked={includeSections.soil}
                         onCheckedChange={(checked) => setIncludeSections({...includeSections, soil: !!checked})}
                       />
-                      <Label htmlFor="soil" className="cursor-pointer">Soil Analysis & Amendments</Label>
+                      <Label htmlFor="soil" className="cursor-pointer">{t('farmPlanner.soilAnalysis')}</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="water"
-                        checked={includeSections.water && season !== "rainy"}
-                        disabled={season === "rainy"}
+                        checked={includeSections.water}
                         onCheckedChange={(checked) => setIncludeSections({...includeSections, water: !!checked})}
                       />
-                      <Label htmlFor="water" className="cursor-pointer">
-                        Water Management {season === "rainy" && "(Excluded for rainy season)"}
-                      </Label>
+                      <Label htmlFor="water" className="cursor-pointer">{t('farmPlanner.waterManagement')}</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -369,38 +387,241 @@ const ComprehensivePlan = () => {
                         checked={includeSections.market}
                         onCheckedChange={(checked) => setIncludeSections({...includeSections, market: !!checked})}
                       />
-                      <Label htmlFor="market" className="cursor-pointer">Market Price Estimates</Label>
+                      <Label htmlFor="market" className="cursor-pointer">{t('farmPlanner.marketPrices')}</Label>
                     </div>
                   </div>
                 </div>
 
                 <Button onClick={handleGeneratePlan} className="w-full" disabled={isGenerating}>
                   {isGenerating ? (
-                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating Comprehensive Plan...</>
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('farmPlanner.generating')}</>
                   ) : (
-                    <><Tractor className="mr-2 h-4 w-4" />Generate Comprehensive Plan</>
+                    <><Tractor className="mr-2 h-4 w-4" />{t('farmPlanner.generatePlan')}</>
                   )}
                 </Button>
               </CardContent>
             </Card>
           )}
 
-          {analysis && (
+          {plan && climateData && (
             <div className="space-y-6">
-              <Card>
+              <Card className="shadow-[var(--shadow-card)] border-primary/20">
                 <CardHeader>
-                  <CardTitle>Your Comprehensive Farm Plan</CardTitle>
-                  <CardDescription>AI-generated plan integrating all selected aspects</CardDescription>
+                  <CardTitle className="text-2xl">{t('farmPlanner.yourPlan')}</CardTitle>
+                  <CardDescription>AI-generated comprehensive farm plan with climate insights</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {Object.entries(analysis).map(([key, value]) => (
-                    <div key={key} className="p-4 rounded-lg bg-muted/50">
-                      <h3 className="font-semibold mb-2 capitalize">{key} Analysis</h3>
-                      <pre className="text-sm text-muted-foreground whitespace-pre-wrap">{JSON.stringify(value, null, 2)}</pre>
-                    </div>
-                  ))}
-                </CardContent>
               </Card>
+
+              {/* Executive Summary */}
+              {plan.executiveSummary && (
+                <Card className="shadow-[var(--shadow-card)]">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5 text-primary" />
+                      Executive Summary
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-muted-foreground">{plan.executiveSummary.overview}</p>
+                    {plan.executiveSummary.keyRecommendations && (
+                      <div className="space-y-2">
+                        <h4 className="font-semibold">Key Recommendations:</h4>
+                        <ul className="list-disc list-inside space-y-1">
+                          {plan.executiveSummary.keyRecommendations.map((rec: string, idx: number) => (
+                            <li key={idx} className="text-sm text-muted-foreground">{rec}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {plan.executiveSummary.expectedOutcomes && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                        <div className="p-4 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5">
+                          <p className="text-sm text-muted-foreground mb-1">Expected Yield</p>
+                          <p className="text-xl font-bold text-primary">{plan.executiveSummary.expectedOutcomes.yield}</p>
+                        </div>
+                        <div className="p-4 rounded-lg bg-gradient-to-br from-secondary/30 to-secondary/10">
+                          <p className="text-sm text-muted-foreground mb-1">Revenue Projection</p>
+                          <p className="text-xl font-bold">{plan.executiveSummary.expectedOutcomes.revenue}</p>
+                        </div>
+                        <div className="p-4 rounded-lg bg-gradient-to-br from-accent/50 to-accent/20">
+                          <p className="text-sm text-muted-foreground mb-1">ROI</p>
+                          <p className="text-xl font-bold">{plan.executiveSummary.expectedOutcomes.roi}</p>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Climate Analysis with Charts */}
+              {plan.climaticAnalysis && (
+                <Card className="shadow-[var(--shadow-card)] border-primary/20">
+                  <CardHeader>
+                    <CardTitle>{t('farmPlanner.climateInsights')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <p className="text-muted-foreground">{plan.climaticAnalysis.currentConditions}</p>
+                    
+                    {plan.climaticAnalysis.optimalPlantingWindow && (
+                      <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                        <h4 className="font-semibold mb-2 flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-primary" />
+                          Optimal Planting Window
+                        </h4>
+                        <div className="flex items-center gap-4">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Start Date</p>
+                            <p className="font-bold text-primary">{plan.climaticAnalysis.optimalPlantingWindow.start}</p>
+                          </div>
+                          <div className="h-8 w-px bg-border" />
+                          <div>
+                            <p className="text-xs text-muted-foreground">End Date</p>
+                            <p className="font-bold text-primary">{plan.climaticAnalysis.optimalPlantingWindow.end}</p>
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-3">{plan.climaticAnalysis.optimalPlantingWindow.reasoning}</p>
+                      </div>
+                    )}
+
+                    {plan.climaticAnalysis.recommendations && (
+                      <ClimateRecommendations recommendations={plan.climaticAnalysis.recommendations} />
+                    )}
+
+                    {plan.charts && plan.charts.monthlyWaterUsage && (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={plan.charts.monthlyWaterUsage}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                          <YAxis stroke="hsl(var(--muted-foreground))" />
+                          <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                          <Legend />
+                          <Line type="monotone" dataKey="usage" stroke="hsl(var(--primary))" strokeWidth={2} name="Water Usage (L)" />
+                          <Line type="monotone" dataKey="rainfall" stroke="hsl(var(--secondary))" strokeWidth={2} name="Rainfall (mm)" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Crop Management */}
+              {plan.cropManagement && (
+                <Card className="shadow-[var(--shadow-card)]">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Sprout className="h-5 w-5 text-primary" />
+                      Crop Management
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {plan.cropManagement.recommendedCrops && (
+                      <div className="space-y-3">
+                        {plan.cropManagement.recommendedCrops.map((crop: any, idx: number) => (
+                          <div key={idx} className="p-4 rounded-lg bg-primary/5 border border-primary/10">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h4 className="font-semibold text-lg">{crop.crop}</h4>
+                                <p className="text-sm text-muted-foreground">{crop.variety}</p>
+                              </div>
+                              <span className="text-sm font-bold text-primary px-3 py-1 rounded bg-primary/10">
+                                {crop.expectedYield}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                              <div>
+                                <p className="text-muted-foreground text-xs">Planting</p>
+                                <p className="font-medium">{crop.plantingDate}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground text-xs">Harvest</p>
+                                <p className="font-medium">{crop.harvestDate}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground text-xs">Spacing</p>
+                                <p className="font-medium">{crop.spacing}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground text-xs">Market Value</p>
+                                <p className="font-medium text-primary">{crop.marketValue}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Financial Projection */}
+              {plan.financialProjection && (
+                <Card className="shadow-[var(--shadow-card)]">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <DollarSign className="h-5 w-5 text-primary" />
+                      {t('farmPlanner.financialProjection')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {plan.financialProjection.startup && (
+                      <div>
+                        <h4 className="font-semibold mb-3">Startup Costs</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {Object.entries(plan.financialProjection.startup).map(([key, value]: [string, any]) => (
+                            key !== 'total' && (
+                              <div key={key} className="p-3 rounded-lg bg-muted/50">
+                                <p className="text-xs text-muted-foreground capitalize">{key}</p>
+                                <p className="font-bold">{typeof value === 'object' ? value.cost : value}</p>
+                              </div>
+                            )
+                          ))}
+                          <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
+                            <p className="text-xs text-muted-foreground">Total</p>
+                            <p className="font-bold text-primary text-lg">{plan.financialProjection.startup.total}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {plan.charts && plan.charts.financialProjection && (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={plan.charts.financialProjection}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                          <YAxis stroke="hsl(var(--muted-foreground))" />
+                          <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                          <Legend />
+                          <Bar dataKey="revenue" fill="hsl(var(--primary))" name="Revenue" />
+                          <Bar dataKey="expenses" fill="hsl(var(--destructive))" name="Expenses" />
+                          <Bar dataKey="profit" fill="hsl(var(--secondary))" name="Profit" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+
+                    {plan.financialProjection.profitability && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="p-4 rounded-lg bg-primary/5">
+                          <p className="text-sm text-muted-foreground mb-1">ROI</p>
+                          <p className="text-2xl font-bold text-primary">{plan.financialProjection.profitability.roi}</p>
+                        </div>
+                        <div className="p-4 rounded-lg bg-accent/30">
+                          <p className="text-sm text-muted-foreground mb-1">Break-Even</p>
+                          <p className="text-2xl font-bold">{plan.financialProjection.profitability.breakeven}</p>
+                        </div>
+                        <div className="p-4 rounded-lg bg-secondary/30">
+                          <p className="text-sm text-muted-foreground mb-1">Net Profit</p>
+                          <p className="text-2xl font-bold">{plan.financialProjection.profitability.netProfit}</p>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Data Sources */}
+              {plan.resources && (
+                <DataSources sources={plan.resources} />
+              )}
             </div>
           )}
         </div>

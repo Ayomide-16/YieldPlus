@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import { useFarmData } from "@/contexts/FarmDataContext";
 import ToolSuggestions from "@/components/ToolSuggestions";
+import DataSources from "@/components/DataSources";
+import ClimateRecommendations from "@/components/ClimateRecommendations";
 
 const CropPlanner = () => {
   const [location, setLocation] = useState({ country: "", state: "", localGovernment: "" });
@@ -311,6 +313,14 @@ const CropPlanner = () => {
                   <CardHeader><CardTitle>Climate Analysis</CardTitle></CardHeader>
                   <CardContent><p className="text-muted-foreground whitespace-pre-wrap">{analysis.climateAnalysis}</p></CardContent>
                 </Card>
+              )}
+
+              {analysis.climateRecommendations && (
+                <ClimateRecommendations recommendations={analysis.climateRecommendations} />
+              )}
+
+              {analysis.dataSources && (
+                <DataSources sources={analysis.dataSources} />
               )}
 
               <ToolSuggestions currentTool="crop" farmData={farmData} />

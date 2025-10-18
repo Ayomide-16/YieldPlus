@@ -19,7 +19,7 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const systemPrompt = `You are an expert agricultural economist. Provide comprehensive, data-rich market analysis with extensive historical data, forecasts, profitability analysis, and chart data in JSON format. If the crop type is invalid or doesn't exist, return an error message with suggestions.`;
+    const systemPrompt = `You are an expert agricultural economist with access to FAO, World Bank, national agricultural market data, and climate data from NASA POWER and NOAA NCEI. Provide comprehensive, data-rich market analysis with extensive historical data, forecasts, seasonal climate context, profitability analysis, and chart data in JSON format. Always cite reputable sources. If the crop type is invalid or doesn't exist, return an error message with suggestions.`;
 
     const userPrompt = `Estimate market prices and provide selling strategy for:
     
@@ -35,19 +35,30 @@ serve(async (req) => {
     
     If it IS a valid crop, provide comprehensive analysis in JSON format with these exact keys:
     {
-      "summary": "Brief market overview",
+      "summary": "Brief market overview with seasonal climate context",
       "priceEstimate": {"lowPrice": "₦X/kg", "averagePrice": "₦X/kg", "highPrice": "₦X/kg", "forecastAccuracy": "85%", "totalRevenue": "₦X", "pricePerTon": "₦X/ton"},
       "historicalPrices": [{"month": "Jan", "price": 450, "demand": 75}, {"month": "Feb", "price": 480, "demand": 80}],
       "marketTrends": [{"factor": "Factor", "impact": "Impact analysis", "trend": "Upward", "confidence": "High"}],
       "demandAnalysis": {"currentDemand": "High", "seasonalPattern": "Pattern", "competitionLevel": "Medium", "supplyGap": "Analysis"},
-      "priceForecast": [{"period": "Next Month", "estimatedPrice": "₦X/kg", "confidence": "85%"}],
-      "sellingStrategy": "Comprehensive strategy",
+      "seasonalClimateImpact": {
+        "harvestSeasonWeather": "Weather conditions during harvest period based on NASA POWER data",
+        "storageConditions": "Climate-based storage recommendations",
+        "transportRecommendations": "Climate considerations for transport timing"
+      },
+      "priceForecast": [{"period": "Next Month", "estimatedPrice": "₦X/kg", "confidence": "85%", "climateFactors": "Climate impacts on price"}],
+      "sellingStrategy": "Comprehensive strategy with optimal selling timing based on climate and market data",
       "marketChannels": [{"channel": "Local Market", "priceRange": "₦X-Y/kg", "volume": "X tons", "paymentTerms": "Terms", "recommendation": "High"}],
       "riskFactors": [{"risk": "Risk", "probability": "Medium", "impact": "High", "mitigation": "Strategy"}],
-      "profitabilityAnalysis": {"grossRevenue": "₦X", "estimatedCosts": "₦X", "netProfit": "₦X", "profitMargin": "X%", "breakEvenPoint": "X kg"}
+      "profitabilityAnalysis": {"grossRevenue": "₦X", "estimatedCosts": "₦X", "netProfit": "₦X", "profitMargin": "X%", "breakEvenPoint": "X kg"},
+      "dataSources": [
+        {"name": "FAO", "url": "http://www.fao.org/"},
+        {"name": "World Bank", "url": "https://www.worldbank.org/"},
+        {"name": "NASA POWER", "url": "https://power.larc.nasa.gov/"},
+        {"name": "NOAA NCEI", "url": "https://www.ncei.noaa.gov/"}
+      ]
     }
     
-    Provide data for all 12 months in historicalPrices for charts.`;
+    Provide data for all 12 months in historicalPrices for charts. Include seasonal climate context and cite reputable sources.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

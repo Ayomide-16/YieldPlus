@@ -11,6 +11,9 @@ import { useToast } from "@/hooks/use-toast";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useFarmData } from "@/contexts/FarmDataContext";
 import ToolSuggestions from "@/components/ToolSuggestions";
+import DataSources from "@/components/DataSources";
+import ClimateRecommendations from "@/components/ClimateRecommendations";
+import RainPrediction from "@/components/RainPrediction";
 
 const WaterUsageOptimizer = () => {
   const [waterSource, setWaterSource] = useState("");
@@ -222,6 +225,17 @@ const WaterUsageOptimizer = () => {
                 </Card>
               )}
 
+              {analysis.rainPredictions && (
+                <RainPrediction rainPredictions={analysis.rainPredictions} />
+              )}
+
+              {analysis.climateBasedSchedule && (
+                <ClimateRecommendations 
+                  recommendations={analysis.climateBasedSchedule} 
+                  title="Climate-Based Irrigation Schedule"
+                />
+              )}
+
               {analysis.recommendations && (
                 <Card className="shadow-[var(--shadow-card)]">
                   <CardHeader><CardTitle>Additional Recommendations</CardTitle></CardHeader>
@@ -229,6 +243,10 @@ const WaterUsageOptimizer = () => {
                     <p className="text-muted-foreground whitespace-pre-wrap">{typeof analysis.recommendations === 'string' ? analysis.recommendations : JSON.stringify(analysis.recommendations, null, 2)}</p>
                   </CardContent>
                 </Card>
+              )}
+
+              {analysis.dataSources && (
+                <DataSources sources={analysis.dataSources} />
               )}
 
               <ToolSuggestions currentTool="water" farmData={farmData} />

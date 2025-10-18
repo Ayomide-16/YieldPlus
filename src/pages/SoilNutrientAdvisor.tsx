@@ -13,6 +13,8 @@ import { compressImage } from "@/lib/imageUtils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend, RadialBarChart, RadialBar } from "recharts";
 import { useFarmData } from "@/contexts/FarmDataContext";
 import ToolSuggestions from "@/components/ToolSuggestions";
+import DataSources from "@/components/DataSources";
+import ClimateRecommendations from "@/components/ClimateRecommendations";
 
 const SoilNutrientAdvisor = () => {
   const [color, setColor] = useState("");
@@ -374,6 +376,14 @@ const SoilNutrientAdvisor = () => {
                     )}
                   </CardContent>
                 </Card>
+              )}
+
+              {analysis.climateRecommendations && (
+                <ClimateRecommendations recommendations={analysis.climateRecommendations} />
+              )}
+
+              {analysis.dataSources && (
+                <DataSources sources={analysis.dataSources} />
               )}
 
               <ToolSuggestions currentTool="soil" farmData={farmData} />
