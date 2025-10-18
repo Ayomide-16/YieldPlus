@@ -136,9 +136,14 @@ const ComprehensivePlan = () => {
 
       let parsedClimate;
       try {
-        const cleaned = climateResponse.climateData.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        parsedClimate = JSON.parse(cleaned);
-      } catch {
+        if (typeof climateResponse.climateData === 'string') {
+          const cleaned = climateResponse.climateData.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+          parsedClimate = JSON.parse(cleaned);
+        } else {
+          parsedClimate = climateResponse.climateData;
+        }
+      } catch (e) {
+        console.error('Error parsing climate data:', e);
         parsedClimate = { currentConditions: {}, forecast: {} };
       }
       setClimateData(parsedClimate);
@@ -158,10 +163,20 @@ const ComprehensivePlan = () => {
 
       let parsedPlan;
       try {
-        const cleaned = planResponse.plan.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        parsedPlan = JSON.parse(cleaned);
-      } catch {
-        parsedPlan = { executiveSummary: { overview: planResponse.plan } };
+        if (typeof planResponse.plan === 'string') {
+          const cleaned = planResponse.plan.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+          parsedPlan = JSON.parse(cleaned);
+        } else {
+          parsedPlan = planResponse.plan;
+        }
+      } catch (e) {
+        console.error('Error parsing plan:', e);
+        // If JSON parsing fails, create a basic structure with the raw response
+        parsedPlan = { 
+          executiveSummary: { 
+            overview: typeof planResponse.plan === 'string' ? planResponse.plan : 'Plan generated successfully. Details below.' 
+          } 
+        };
       }
 
       // Step 3: Save to database
@@ -183,7 +198,15 @@ const ComprehensivePlan = () => {
       toast({ title: "Success", description: "Comprehensive plan generated successfully!" });
     } catch (error: any) {
       console.error('Error generating plan:', error);
-      toast({ title: "Error", description: error.message || "Failed to generate plan", variant: "destructive" });
+      let errorMessage = "Failed to generate plan";
+      if (error.message) {
+        errorMessage = error.message;
+      }
+      toast({ 
+        title: "Error", 
+        description: errorMessage, 
+        variant: "destructive" 
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -618,9 +641,234 @@ const ComprehensivePlan = () => {
                 </Card>
               )}
 
+              {/* Soil Management */}
+              {plan.soilManagement && (
+                <Card className="shadow-[var(--shadow-card)]">
+                  <CardHeader>
+                    <CardTitle>Soil Management</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {plan.soilManagement.analysis && (
+                      <p className="text-muted-foreground">{plan.soilManagement.analysis}</p>
+                    )}
+                    {plan.soilManagement.amendments && plan.soilManagement.amendments.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="font-semibold">Recommended Amendments:</h4>
+                        {plan.soilManagement.amendments.map((amendment: any, idx: number) => (
+                          <div key={idx} className="p-3 rounded-lg bg-accent/30">
+                            <div className="flex justify-between items-start mb-1">
+                              <p className="font-medium">{amendment.material}</p>
+                              {amendment.cost && <span className="text-sm text-primary">{amendment.cost}</span>}
+                            </div>
+                            <p className="text-sm text-muted-foreground">{amendment.quantity}</p>
+                            <p className="text-sm text-muted-foreground">{amendment.application}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Water Management */}
+              {plan.waterManagement && (
+                <Card className="shadow-[var(--shadow-card)]">
+                  <CardHeader>
+                    <CardTitle>Water Management</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {plan.waterManagement.irrigationSchedule && (
+                      <div className="space-y-2">
+                        <h4 className="font-semibold">Irrigation Schedule:</h4>
+                        {plan.waterManagement.irrigationSchedule.map((schedule: any, idx: number) => (
+                          <div key={idx} className="p-3 rounded-lg bg-primary/5">
+                            <p className="font-medium">{schedule.crop}</p>
+                            <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
+                              <div>
+                                <p className="text-muted-foreground text-xs">Frequency</p>
+                                <p>{schedule.frequency}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground text-xs">Amount</p>
+                                <p>{schedule.amount}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Pest & Disease Management */}
+              {plan.pestDiseaseManagement && (
+                <Card className="shadow-[var(--shadow-card)] border-destructive/20">
+                  <CardHeader>
+                    <CardTitle>Pest & Disease Management</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {plan.pestDiseaseManagement.commonThreats && (
+                      <div className="space-y-3">
+                        {plan.pestDiseaseManagement.commonThreats.map((threat: any, idx: number) => (
+                          <div key={idx} className="p-4 rounded-lg bg-destructive/5 border border-destructive/20">
+                            <div className="flex items-start justify-between mb-2">
+                              <h4 className="font-semibold">{threat.threat}</h4>
+                              <span className={`text-xs px-2 py-1 rounded ${
+                                threat.risk === 'high' ? 'bg-destructive text-destructive-foreground' : 
+                                threat.risk === 'medium' ? 'bg-secondary' : 'bg-muted'
+                              }`}>
+                                {threat.risk} Risk
+                              </span>
+                            </div>
+                            {threat.timing && <p className="text-sm text-muted-foreground mb-2">Timing: {threat.timing}</p>}
+                            {threat.prevention && threat.prevention.length > 0 && (
+                              <div className="mt-2">
+                                <p className="text-sm font-medium mb-1">Prevention:</p>
+                                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                                  {threat.prevention.map((p: string, i: number) => (
+                                    <li key={i}>{p}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {plan.pestDiseaseManagement.ipm && (
+                      <div className="p-4 rounded-lg bg-primary/5">
+                        <h4 className="font-semibold mb-2">Integrated Pest Management</h4>
+                        <p className="text-sm text-muted-foreground">{plan.pestDiseaseManagement.ipm.strategy}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Market Strategy */}
+              {plan.marketStrategy && (
+                <Card className="shadow-[var(--shadow-card)]">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5 text-primary" />
+                      Market Strategy
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {plan.marketStrategy.priceAnalysis && (
+                      <div>
+                        <h4 className="font-semibold mb-3">Price Analysis</h4>
+                        {plan.marketStrategy.priceAnalysis.currentPrices && (
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {plan.marketStrategy.priceAnalysis.currentPrices.map((item: any, idx: number) => (
+                              <div key={idx} className="p-3 rounded-lg bg-primary/5">
+                                <p className="text-sm text-muted-foreground">{item.crop}</p>
+                                <p className="text-lg font-bold text-primary">{item.price}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {plan.marketStrategy.priceAnalysis.bestSellingTime && (
+                          <div className="mt-3 p-3 rounded-lg bg-accent/30">
+                            <p className="text-sm">
+                              <span className="font-semibold">Best Selling Time:</span>{' '}
+                              {plan.marketStrategy.priceAnalysis.bestSellingTime}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Risk Management */}
+              {plan.riskManagement && (
+                <Card className="shadow-[var(--shadow-card)] border-destructive/20">
+                  <CardHeader>
+                    <CardTitle>Risk Management</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {plan.riskManagement.identified && plan.riskManagement.identified.length > 0 && (
+                      <div className="space-y-3">
+                        {plan.riskManagement.identified.map((risk: any, idx: number) => (
+                          <div key={idx} className="p-3 rounded-lg bg-destructive/5 border border-destructive/20">
+                            <div className="flex items-start justify-between mb-2">
+                              <h4 className="font-semibold">{risk.risk}</h4>
+                              <div className="flex gap-2">
+                                <span className={`text-xs px-2 py-1 rounded ${
+                                  risk.probability === 'high' ? 'bg-destructive/20' : 'bg-muted'
+                                }`}>
+                                  {risk.probability} probability
+                                </span>
+                                <span className={`text-xs px-2 py-1 rounded ${
+                                  risk.impact === 'high' ? 'bg-destructive text-destructive-foreground' : 'bg-muted'
+                                }`}>
+                                  {risk.impact} impact
+                                </span>
+                              </div>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              <span className="font-medium">Mitigation:</span> {risk.mitigation}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {plan.riskManagement.contingency && (
+                      <div className="p-4 rounded-lg bg-secondary/30">
+                        <h4 className="font-semibold mb-2">Contingency Plan</h4>
+                        <p className="text-sm text-muted-foreground">{plan.riskManagement.contingency}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Timeline */}
+              {plan.timeline && plan.timeline.length > 0 && (
+                <Card className="shadow-[var(--shadow-card)]">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5 text-primary" />
+                      {t('farmPlanner.timeline')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {plan.timeline.map((phase: any, idx: number) => (
+                        <div key={idx} className="flex gap-4">
+                          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-light text-primary-foreground flex items-center justify-center font-bold">
+                            {idx + 1}
+                          </div>
+                          <div className="flex-1 pb-4 border-l-2 border-border pl-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="font-semibold">{phase.phase}</h4>
+                              <span className="text-sm text-muted-foreground">{phase.startDate} - {phase.endDate}</span>
+                            </div>
+                            {phase.activities && (
+                              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                                {phase.activities.map((activity: string, i: number) => (
+                                  <li key={i}>{activity}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Data Sources */}
-              {plan.resources && (
+              {plan.resources && Array.isArray(plan.resources) && plan.resources.length > 0 && (
                 <DataSources sources={plan.resources} />
+              )}
+              
+              {plan.climaticAnalysis?.dataSources && (
+                <DataSources sources={plan.climaticAnalysis.dataSources} />
               )}
             </div>
           )}

@@ -39,7 +39,7 @@ const RainPrediction = ({ rainPredictions }: RainPredictionProps) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CloudRain className="h-5 w-5 text-primary" />
-          {t('rainPredictions')}
+          {t('common.rainPredictions')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">

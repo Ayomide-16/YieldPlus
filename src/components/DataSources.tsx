@@ -15,15 +15,19 @@ const DataSources = ({ sources }: DataSourcesProps) => {
   const { t } = useTranslation();
 
   if (!sources || sources.length === 0) return null;
+  
+  // Filter out invalid sources
+  const validSources = sources.filter(s => s && s.name && s.url);
+  if (validSources.length === 0) return null;
 
   return (
     <Card className="shadow-[var(--shadow-card)]">
       <CardHeader>
-        <CardTitle className="text-lg">{t('dataSources')}</CardTitle>
+        <CardTitle className="text-lg">{t('common.dataSources')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {sources.map((source, idx) => (
+          {validSources.map((source, idx) => (
             <a
               key={idx}
               href={source.url}

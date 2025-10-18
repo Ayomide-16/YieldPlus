@@ -25,7 +25,7 @@ const ClimateRecommendations = ({ recommendations, title }: ClimateRecommendatio
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Cloud className="h-5 w-5 text-primary" />
-          {title || t('climateRecommendations')}
+          {title || t('common.climateRecommendations')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
