@@ -1,0 +1,50 @@
+{
+  "nav": {
+    "home": "首页",
+    "cropPlanner": "智能作物规划",
+    "soilAdvisor": "土壤健康分析",
+    "waterOptimizer": "水资源管理",
+    "marketEstimator": "市场情报"
+  },
+  "home": {
+    "title": "非洲及全球智能农业解决方案",
+    "subtitle": "AI驱动的农业智能，优化您的农场生产力和盈利能力",
+    "getStarted": "开始使用",
+    "features": "我们的工具"
+  },
+  "tools": {
+    "cropPlanner": {
+      "title": "智能作物规划",
+      "description": "根据您的位置、土壤和气候获得AI驱动的最佳作物种植建议"
+    },
+    "soilAdvisor": {
+      "title": "土壤健康分析",
+      "description": "分析您的土壤状况并获得个性化的营养管理建议"
+    },
+    "waterOptimizer": {
+      "title": "水资源管理",
+      "description": "通过智能灌溉调度和节水策略优化水资源使用"
+    },
+    "marketEstimator": {
+      "title": "市场情报",
+      "description": "获取实时市场价格估算和作物的最佳销售策略"
+    }
+  },
+  "auth": {
+    "signIn": "登录",
+    "signUp": "注册",
+    "signOut": "退出",
+    "email": "邮箱",
+    "password": "密码",
+    "welcome": "欢迎来到Ceres.ai"
+  },
+  "common": {
+    "select": "选择",
+    "country": "国家",
+    "state": "州/省",
+    "city": "城市/区",
+    "save": "保存",
+    "cancel": "取消",
+    "loading": "加载中..."
+  }
+}

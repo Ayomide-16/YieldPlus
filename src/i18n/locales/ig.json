@@ -1,0 +1,50 @@
+{
+  "nav": {
+    "home": "Ụlọ",
+    "cropPlanner": "Atụmatụ Ihe Ọkụkụ Nwere Ọgụgụ Isi",
+    "soilAdvisor": "Nyocha Ahụike Ala",
+    "waterOptimizer": "Njikwa Mmiri",
+    "marketEstimator": "Ọgụgụ Isi Ahịa"
+  },
+  "home": {
+    "title": "Ngwọta Ọrụ Ugbo Nwere Ọgụgụ Isi maka Africa na Karịa",
+    "subtitle": "Ọgụgụ isi ọrụ ugbo nke AI na-eme ka ọ dịkwuo mma na uru nke ugbo gị",
+    "getStarted": "Malite",
+    "features": "Ngwá Ọrụ Anyị"
+  },
+  "tools": {
+    "cropPlanner": {
+      "title": "Atụmatụ Ihe Ọkụkụ Nwere Ọgụgụ Isi",
+      "description": "Nweta ndụmọdụ nke AI na-enye maka ihe ọkụkụ kacha mma ị ga-akụ dabere na ebe ị nọ, ala na ihu igwe"
+    },
+    "soilAdvisor": {
+      "title": "Nyocha Ahụike Ala",
+      "description": "Nyochaa ọnọdụ ala gị ma nweta ndụmọdụ ahaziri onwe gị maka njikwa nri"
+    },
+    "waterOptimizer": {
+      "title": "Njikwa Mmiri",
+      "description": "Mee ka ojiji mmiri dịkwuo mma site n'usoro nhazi ịgba mmiri nwere ọgụgụ isi na atụmatụ nchekwa"
+    },
+    "marketEstimator": {
+      "title": "Ọgụgụ Isi Ahịa",
+      "description": "Nweta atụmatụ ọnụ ahịa ahịa n'oge na atụmatụ ire ere kacha mma maka ihe ọkụkụ gị"
+    }
+  },
+  "auth": {
+    "signIn": "Banye",
+    "signUp": "Debanye Aha",
+    "signOut": "Pụọ",
+    "email": "Email",
+    "password": "Paswọọdụ",
+    "welcome": "Nnọọ na Ceres.ai"
+  },
+  "common": {
+    "select": "Họrọ",
+    "country": "Mba",
+    "state": "Steeti/Ógbè",
+    "city": "Obodo/Mpaghara",
+    "save": "Chekwaa",
+    "cancel": "Kagbuo",
+    "loading": "Na-ebu..."
+  }
+}

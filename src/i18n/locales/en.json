@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "home": "Home",
+    "cropPlanner": "Crop Intelligence",
+    "soilAdvisor": "Soil Analysis",
+    "waterOptimizer": "Water Management",
+    "marketEstimator": "Market Insights",
+    "comprehensivePlan": "Farm Planner",
+    "myPlans": "My Plans",
+    "myFarms": "My Farms"
+  },
+  "home": {
+    "title": "Smart Farming Solutions for Africa and Beyond",
+    "subtitle": "AI-powered agricultural intelligence to optimize your farm's productivity and profitability",
+    "getStarted": "Get Started",
+    "features": "Our Tools"
+  },
+  "tools": {
+    "cropPlanner": {
+      "title": "Smart Crop Planning",
+      "description": "Get AI-powered recommendations for the best crops to grow based on your location, soil, and climate"
+    },
+    "soilAdvisor": {
+      "title": "Soil Health Analysis",
+      "description": "Analyze your soil conditions and receive personalized nutrient management recommendations"
+    },
+    "waterOptimizer": {
+      "title": "Water Management",
+      "description": "Optimize water usage with intelligent irrigation scheduling and conservation strategies"
+    },
+    "marketEstimator": {
+      "title": "Market Intelligence",
+      "description": "Get real-time market price estimates and optimal selling strategies for your crops"
+    }
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out",
+    "email": "Email",
+    "password": "Password",
+    "welcome": "Welcome to Ceres.ai"
+  },
+  "common": {
+    "select": "Select",
+    "country": "Country",
+    "state": "State/Province",
+    "city": "City/District",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading..."
+  }
+}

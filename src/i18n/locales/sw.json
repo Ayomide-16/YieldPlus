@@ -1,0 +1,50 @@
+{
+  "nav": {
+    "home": "Nyumbani",
+    "cropPlanner": "Mipango ya Mazao ya Akili",
+    "soilAdvisor": "Uchambuzi wa Afya ya Udongo",
+    "waterOptimizer": "Usimamizi wa Maji",
+    "marketEstimator": "Akili ya Soko"
+  },
+  "home": {
+    "title": "Suluhisho za Kilimo cha Akili kwa Afrika na Zaidi",
+    "subtitle": "Akili ya kilimo inayoendeshwa na AI kuboresha tija na faida ya shamba lako",
+    "getStarted": "Anza",
+    "features": "Zana Zetu"
+  },
+  "tools": {
+    "cropPlanner": {
+      "title": "Mipango ya Mazao ya Akili",
+      "description": "Pata mapendekezo yanayoendeshwa na AI kwa mazao bora ya kupanda kulingana na eneo lako, udongo na hali ya hewa"
+    },
+    "soilAdvisor": {
+      "title": "Uchambuzi wa Afya ya Udongo",
+      "description": "Chambua hali ya udongo wako na upokee mapendekezo maalum ya usimamizi wa virutubisho"
+    },
+    "waterOptimizer": {
+      "title": "Usimamizi wa Maji",
+      "description": "Boresha matumizi ya maji kupitia ratiba ya umwagiliaji wa akili na mikakati ya uhifadhi"
+    },
+    "marketEstimator": {
+      "title": "Akili ya Soko",
+      "description": "Pata makadirio ya bei za soko kwa wakati halisi na mikakati bora ya kuuza mazao yako"
+    }
+  },
+  "auth": {
+    "signIn": "Ingia",
+    "signUp": "Jisajili",
+    "signOut": "Toka",
+    "email": "Barua Pepe",
+    "password": "Nywila",
+    "welcome": "Karibu kwenye Ceres.ai"
+  },
+  "common": {
+    "select": "Chagua",
+    "country": "Nchi",
+    "state": "Jimbo",
+    "city": "Jiji/Wilaya",
+    "save": "Hifadhi",
+    "cancel": "Ghairi",
+    "loading": "Inapakia..."
+  }
+}

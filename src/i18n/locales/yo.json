@@ -1,0 +1,50 @@
+{
+  "nav": {
+    "home": "Ile",
+    "cropPlanner": "Eto Irugbin Ologbon",
+    "soilAdvisor": "Itupalẹ Ilera Ile",
+    "waterOptimizer": "Isakoso Omi",
+    "marketEstimator": "Oye Ọja"
+  },
+  "home": {
+    "title": "Awọn Ojutu Ogbin Ologbon fun Africa ati Bẹẹbẹẹ",
+    "subtitle": "Oye ogbin ti AI n ṣakoso lati mu iṣelọpọ ati ere oko rẹ pọ si",
+    "getStarted": "Bẹrẹ",
+    "features": "Awọn Irinṣẹ Wa"
+  },
+  "tools": {
+    "cropPlanner": {
+      "title": "Eto Irugbin Ologbon",
+      "description": "Gba awọn iṣeduro ti AI n ṣe fun awọn irugbin to dara julọ lati gbin ni ibiti o wa, ile ati oju-ọjọ"
+    },
+    "soilAdvisor": {
+      "title": "Itupalẹ Ilera Ile",
+      "description": "Ṣe ayẹwo awọn ipo ile rẹ ki o gba awọn iṣeduro ti ara ẹni fun isakoso ounjẹ"
+    },
+    "waterOptimizer": {
+      "title": "Isakoso Omi",
+      "description": "Mu lilo omi pọ si pẹlu eto omi ologbon ati awọn ilana itoju"
+    },
+    "marketEstimator": {
+      "title": "Oye Ọja",
+      "description": "Gba awọn iṣiro idiyele ọja ni akoko gidi ati awọn ilana tita to dara julọ fun awọn irugbin rẹ"
+    }
+  },
+  "auth": {
+    "signIn": "Wọle",
+    "signUp": "Forukọsilẹ",
+    "signOut": "Jade",
+    "email": "Imeeli",
+    "password": "Ọrọigbaniwọle",
+    "welcome": "Kaabo si Ceres.ai"
+  },
+  "common": {
+    "select": "Yan",
+    "country": "Orilẹ-ede",
+    "state": "Ipinlẹ",
+    "city": "Ilu/Agbegbe",
+    "save": "Fi pamọ",
+    "cancel": "Fagile",
+    "loading": "N ṣiṣẹ..."
+  }
+}

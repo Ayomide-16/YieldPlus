@@ -1,0 +1,50 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "cropPlanner": "Planification Intelligente des Cultures",
+    "soilAdvisor": "Analyse de la Santé du Sol",
+    "waterOptimizer": "Gestion de l'Eau",
+    "marketEstimator": "Intelligence du Marché"
+  },
+  "home": {
+    "title": "Solutions Agricoles Intelligentes pour l'Afrique et Au-delà",
+    "subtitle": "Intelligence agricole alimentée par l'IA pour optimiser la productivité et la rentabilité de votre ferme",
+    "getStarted": "Commencer",
+    "features": "Nos Outils"
+  },
+  "tools": {
+    "cropPlanner": {
+      "title": "Planification Intelligente des Cultures",
+      "description": "Obtenez des recommandations basées sur l'IA pour les meilleures cultures à cultiver selon votre localisation, sol et climat"
+    },
+    "soilAdvisor": {
+      "title": "Analyse de la Santé du Sol",
+      "description": "Analysez les conditions de votre sol et recevez des recommandations personnalisées pour la gestion des nutriments"
+    },
+    "waterOptimizer": {
+      "title": "Gestion de l'Eau",
+      "description": "Optimisez l'utilisation de l'eau avec une planification intelligente de l'irrigation et des stratégies de conservation"
+    },
+    "marketEstimator": {
+      "title": "Intelligence du Marché",
+      "description": "Obtenez des estimations de prix du marché en temps réel et des stratégies de vente optimales pour vos cultures"
+    }
+  },
+  "auth": {
+    "signIn": "Se Connecter",
+    "signUp": "S'inscrire",
+    "signOut": "Se Déconnecter",
+    "email": "Email",
+    "password": "Mot de passe",
+    "welcome": "Bienvenue sur Ceres.ai"
+  },
+  "common": {
+    "select": "Sélectionner",
+    "country": "Pays",
+    "state": "État/Province",
+    "city": "Ville/District",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "loading": "Chargement..."
+  }
+}

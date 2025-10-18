@@ -1,0 +1,50 @@
+{
+  "nav": {
+    "home": "Gida",
+    "cropPlanner": "Shirye-shiryen Amfani Mai Hankali",
+    "soilAdvisor": "Binciken Lafiyar Ƙasa",
+    "waterOptimizer": "Gudanar Ruwa",
+    "marketEstimator": "Bayanan Kasuwa"
+  },
+  "home": {
+    "title": "Hanyoyin Noma Mai Hankali don Afirka da Ƙari",
+    "subtitle": "Bayanan noma da AI ke tafiyar da ita don haɓaka yawan amfani da riba na gonar ku",
+    "getStarted": "Fara",
+    "features": "Kayan Aikinmu"
+  },
+  "tools": {
+    "cropPlanner": {
+      "title": "Shirye-shiryen Amfani Mai Hankali",
+      "description": "Sami shawarwari da AI ke bayarwa game da mafi kyawun amfanin gona da za ku noma bisa ga wurin ku, ƙasa da yanayi"
+    },
+    "soilAdvisor": {
+      "title": "Binciken Lafiyar Ƙasa",
+      "description": "Bincika yanayin ƙasar ku kuma ku sami shawarwari na musamman game da gudanar da abinci mai gina jiki"
+    },
+    "waterOptimizer": {
+      "title": "Gudanar Ruwa",
+      "description": "Haɓaka amfani da ruwa tare da jadawalin ban ruwa mai hankali da dabarun kiyayewa"
+    },
+    "marketEstimator": {
+      "title": "Bayanan Kasuwa",
+      "description": "Sami ƙididdige farashin kasuwa na lokaci-lokaci da mafi kyawun dabarun siyarwa don amfanin gonar ku"
+    }
+  },
+  "auth": {
+    "signIn": "Shiga",
+    "signUp": "Yi Rajista",
+    "signOut": "Fita",
+    "email": "Imel",
+    "password": "Kalmar Sirri",
+    "welcome": "Barka da zuwa Ceres.ai"
+  },
+  "common": {
+    "select": "Zaɓa",
+    "country": "Ƙasa",
+    "state": "Jiha",
+    "city": "Birni/Yanki",
+    "save": "Ajiye",
+    "cancel": "Soke",
+    "loading": "Ana Lodi..."
+  }
+}
