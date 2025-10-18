@@ -1,4 +1,4 @@
-import { Home, Sprout, Droplets, DollarSign, TestTube, Tractor, User, BookmarkIcon, LogOut } from "lucide-react";
+import { Home, Sprout, Droplets, DollarSign, TestTube, Tractor, User, BookmarkIcon, LogOut, Bug, BookOpen } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,11 +26,13 @@ const AppSidebar = () => {
 
   const items = [
     { title: t("nav.home"), url: "/", icon: Home },
+    { title: t("nav.comprehensivePlan"), url: "/comprehensive-plan", icon: Tractor },
     { title: t("nav.cropPlanner"), url: "/crop-planner", icon: Sprout },
     { title: t("nav.soilAdvisor"), url: "/soil-advisor", icon: TestTube },
     { title: t("nav.waterOptimizer"), url: "/water-optimizer", icon: Droplets },
     { title: t("nav.marketEstimator"), url: "/market-estimator", icon: DollarSign },
-    { title: t("nav.comprehensivePlan"), url: "/comprehensive-plan", icon: Tractor },
+    { title: t("nav.pestIdentifier"), url: "/pest-identifier", icon: Bug },
+    { title: t("nav.resources"), url: "/resources", icon: BookOpen },
   ];
 
   const isActive = (path: string) => currentPath === path;

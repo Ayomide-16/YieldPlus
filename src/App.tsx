@@ -12,6 +12,8 @@ import SoilNutrientAdvisor from "./pages/SoilNutrientAdvisor";
 import WaterUsageOptimizer from "./pages/WaterUsageOptimizer";
 import MarketPriceEstimator from "./pages/MarketPriceEstimator";
 import ComprehensivePlan from "./pages/ComprehensivePlan";
+import PestIdentifier from "./pages/PestIdentifier";
+import Resources from "./pages/Resources";
 import MyPlans from "./pages/MyPlans";
 import MyFarms from "./pages/MyFarms";
 import Auth from "./pages/Auth";
@@ -41,6 +43,8 @@ const App = () => (
                     <Route path="/water-optimizer" element={<WaterUsageOptimizer />} />
                     <Route path="/market-estimator" element={<MarketPriceEstimator />} />
                     <Route path="/comprehensive-plan" element={<ComprehensivePlan />} />
+                    <Route path="/pest-identifier" element={<PestIdentifier />} />
+                    <Route path="/resources" element={<Resources />} />
                     <Route path="/my-plans" element={<MyPlans />} />
                     <Route path="/my-farms" element={<MyFarms />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

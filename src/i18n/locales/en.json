@@ -6,6 +6,8 @@
     "waterOptimizer": "Water Management",
     "marketEstimator": "Market Insights",
     "comprehensivePlan": "Farm Planner",
+    "pestIdentifier": "Pest & Disease Identifier",
+    "resources": "Resources",
     "myPlans": "My Plans",
     "myFarms": "My Farms"
   },
@@ -13,7 +15,9 @@
     "title": "Smart Farming Solutions for Africa and Beyond",
     "subtitle": "AI-powered agricultural intelligence to optimize your farm's productivity and profitability",
     "getStarted": "Get Started",
-    "features": "Our Tools"
+    "features": "Our Tools",
+    "mainTool": "Comprehensive Farm Planner",
+    "mainToolDesc": "All-in-one planning tool powered by real-time climate data"
   },
   "tools": {
     "cropPlanner": {
@@ -31,6 +35,10 @@
     "marketEstimator": {
       "title": "Market Intelligence",
       "description": "Get real-time market price estimates and optimal selling strategies for your crops"
+    },
+    "pestIdentifier": {
+      "title": "Pest & Disease Identifier",
+      "description": "Identify pests and diseases affecting your crops and get treatment recommendations"
     }
   },
   "auth": {
@@ -39,7 +47,9 @@
     "signOut": "Sign Out",
     "email": "Email",
     "password": "Password",
-    "welcome": "Welcome to Ceres.ai"
+    "welcome": "Welcome to Ceres.ai",
+    "required": "Authentication Required",
+    "pleaseSignIn": "Please sign in to access this feature"
   },
   "common": {
     "select": "Select",
@@ -48,6 +58,80 @@
     "city": "City/District",
     "save": "Save",
     "cancel": "Cancel",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "submit": "Submit",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "print": "Print",
+    "close": "Close"
+  },
+  "farmPlanner": {
+    "title": "Comprehensive Farm Planner",
+    "subtitle": "Generate a complete farming plan with climate insights and expert recommendations",
+    "selectFarm": "Select or Create a Farm",
+    "selectFarmDesc": "Choose an existing farm or create a new one",
+    "createNewFarm": "Create New Farm",
+    "farmName": "Farm Name",
+    "farmSize": "Farm Size (hectares)",
+    "soilType": "Soil Type",
+    "waterSource": "Water Source",
+    "irrigationMethod": "Irrigation Method",
+    "cropTypes": "Crop Types (comma-separated)",
+    "plantingMonth": "Preferred Planting Month",
+    "configuration": "Plan Configuration",
+    "includeSections": "Include in Plan",
+    "cropPlanning": "Crop Planning & Recommendations",
+    "soilAnalysis": "Soil Analysis & Amendments",
+    "waterManagement": "Water Management",
+    "marketPrices": "Market Price Estimates",
+    "pestManagement": "Pest & Disease Management",
+    "generatePlan": "Generate Comprehensive Plan",
+    "generating": "Generating Plan...",
+    "yourPlan": "Your Comprehensive Farm Plan",
+    "climateInsights": "Climate Insights",
+    "financialProjection": "Financial Projection",
+    "timeline": "Implementation Timeline",
+    "dataSources": "Data Sources & References"
+  },
+  "pestIdentifier": {
+    "title": "Pest & Disease Identifier",
+    "subtitle": "Identify and treat crop pests and diseases",
+    "selectCrop": "Select Crop Type",
+    "selectSymptoms": "Select Observed Symptoms",
+    "addSymptom": "Add Symptom",
+    "customSymptom": "Describe custom symptom",
+    "analyze": "Analyze",
+    "analyzing": "Analyzing...",
+    "diagnosis": "Diagnosis",
+    "treatment": "Treatment Options",
+    "prevention": "Prevention Measures",
+    "organicTreatment": "Organic Treatment",
+    "chemicalTreatment": "Chemical Treatment",
+    "expertAdvice": "Expert Advice",
+    "economicImpact": "Economic Impact",
+    "resources": "Additional Resources"
+  },
+  "resources": {
+    "title": "Resources",
+    "subtitle": "Learning materials, news, and expert support",
+    "pdfs": "Study Materials",
+    "news": "Agricultural News",
+    "expert": "Expert Consultation",
+    "requestExpert": "Request Expert Help",
+    "urgency": "Urgency Level",
+    "subject": "Subject",
+    "description": "Description",
+    "submit": "Submit Request",
+    "yourConsultations": "Your Consultations",
+    "status": "Status",
+    "pending": "Pending",
+    "resolved": "Resolved"
   }
 }

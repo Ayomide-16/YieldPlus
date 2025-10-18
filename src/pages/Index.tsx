@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Sprout, Droplet, TrendingUp, TestTube } from "lucide-react";
+import { Sprout, Droplet, TrendingUp, TestTube, Tractor, Bug, BookOpen } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,14 @@ import heroImage from "@/assets/hero-farmland.jpg";
 const Index = () => {
   const { t } = useTranslation();
   
+  const mainTool = {
+    title: "Comprehensive Farm Planner",
+    description: "All-in-one farm planning with real-time climate data, soil analysis, water management, market insights, and pest management",
+    icon: Tractor,
+    path: "/comprehensive-plan",
+    gradient: "from-primary/20 to-primary/10"
+  };
+
   const tools = [
     {
       title: t("tools.cropPlanner.title"),
@@ -40,6 +48,22 @@ const Index = () => {
       path: "/market-estimator",
       gradient: "from-purple-500/20 to-pink-500/20",
       iconColor: "text-purple-600"
+    },
+    {
+      title: t("tools.pestIdentifier.title"),
+      description: t("tools.pestIdentifier.description"),
+      icon: Bug,
+      path: "/pest-identifier",
+      gradient: "from-red-500/20 to-rose-500/20",
+      iconColor: "text-red-600"
+    },
+    {
+      title: "Resources & Expert Help",
+      description: "Access study materials, agricultural news, and connect with farming experts",
+      icon: BookOpen,
+      path: "/resources",
+      gradient: "from-indigo-500/20 to-violet-500/20",
+      iconColor: "text-indigo-600"
     }
   ];
 
@@ -67,37 +91,60 @@ const Index = () => {
               {t("home.subtitle")}
             </p>
             <Button asChild size="lg" className="shadow-lg hover:shadow-xl transition-shadow animate-fade-in">
-              <Link to="/crop-planner">{t("home.getStarted")}</Link>
+              <Link to="/comprehensive-plan">{t("home.getStarted")}</Link>
             </Button>
           </div>
         </div>
       </div>
 
+      {/* Main Tool Highlight */}
+      <div className="container mx-auto px-4 py-16">
+        <Card className="max-w-4xl mx-auto border-2 border-primary/30 bg-gradient-to-br from-primary/10 to-primary/5 shadow-2xl">
+          <CardHeader className="text-center pb-8">
+            <div className="mx-auto mb-4 h-20 w-20 rounded-3xl bg-primary/20 flex items-center justify-center">
+              <mainTool.icon className="h-12 w-12 text-primary" />
+            </div>
+            <CardTitle className="text-3xl mb-3">{mainTool.title}</CardTitle>
+            <CardDescription className="text-lg max-w-2xl mx-auto">
+              {mainTool.description}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center pb-8">
+            <Button asChild size="lg" className="shadow-lg">
+              <Link to={mainTool.path}>
+                <Tractor className="mr-2 h-5 w-5" />
+                Create Your Farm Plan
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Tools Grid */}
-      <div className="container mx-auto px-4 py-20">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">{t("home.features")}</h2>
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold mb-3">Specialized Tools</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Comprehensive tools designed for modern African farming
+            Individual tools for specific farming needs
           </p>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 max-w-7xl mx-auto">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
           {tools.map((tool, index) => (
             <Card 
               key={tool.path} 
-              className={`group border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl bg-gradient-to-br ${tool.gradient} backdrop-blur-sm animate-fade-in`}
+              className={`group border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-xl bg-gradient-to-br ${tool.gradient} backdrop-blur-sm animate-fade-in`}
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <CardHeader className="space-y-4">
-                <div className={`h-16 w-16 rounded-2xl bg-background/80 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                  <tool.icon className={`h-8 w-8 ${tool.iconColor}`} />
+              <CardHeader className="space-y-3">
+                <div className={`h-12 w-12 rounded-xl bg-background/80 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                  <tool.icon className={`h-6 w-6 ${tool.iconColor}`} />
                 </div>
-                <CardTitle className="text-2xl">{tool.title}</CardTitle>
-                <CardDescription className="text-base leading-relaxed">{tool.description}</CardDescription>
+                <CardTitle className="text-xl">{tool.title}</CardTitle>
+                <CardDescription className="text-sm leading-relaxed">{tool.description}</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button asChild variant="default" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                <Button asChild variant="outline" size="sm" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                   <Link to={tool.path}>Launch Tool</Link>
                 </Button>
               </CardContent>
