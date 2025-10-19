@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Sprout, Loader2, AlertTriangle, TrendingUp } from "lucide-react";
+import { UnitSelector, convertToHectares } from "@/components/UnitSelector";
 import LocationSelector from "@/components/LocationSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +21,7 @@ const CropPlanner = () => {
   const [soilType, setSoilType] = useState("");
   const [cropType, setCropType] = useState("");
   const [farmSize, setFarmSize] = useState("");
+  const [farmSizeUnit, setFarmSizeUnit] = useState("hectares");
   const [showResults, setShowResults] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<any>(null);
@@ -100,9 +102,12 @@ const CropPlanner = () => {
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="farmSize">Farm Size (plots) *</Label>
-                    <Input id="farmSize" type="number" placeholder="e.g., 10" value={farmSize} onChange={(e) => setFarmSize(e.target.value)} />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="farmSize">Farm Size *</Label>
+                      <Input id="farmSize" type="number" placeholder="e.g., 10" value={farmSize} onChange={(e) => setFarmSize(e.target.value)} />
+                    </div>
+                    <UnitSelector value={farmSizeUnit} onChange={setFarmSizeUnit} label="Unit *" />
                   </div>
                 </div>
 

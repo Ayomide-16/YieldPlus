@@ -110,8 +110,8 @@ const ComprehensivePlan = () => {
       return;
     }
 
-    if (!plantingMonth || !preferredPlantingDate) {
-      toast({ title: "Missing Information", description: "Please select planting month and date", variant: "destructive" });
+    if (!plantingMonth) {
+      toast({ title: "Missing Information", description: "Please select planting month", variant: "destructive" });
       return;
     }
 

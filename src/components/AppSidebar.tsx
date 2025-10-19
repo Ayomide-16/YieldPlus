@@ -1,4 +1,4 @@
-import { Home, Sprout, Droplets, DollarSign, TestTube, Tractor, User, BookmarkIcon, LogOut, Bug, BookOpen } from "lucide-react";
+import { Home, Sprout, Droplets, DollarSign, TestTube, Tractor, User, BookmarkIcon, LogOut, Bug, BookOpen, Leaf } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,6 +32,7 @@ const AppSidebar = () => {
     { title: t("nav.waterOptimizer"), url: "/water-optimizer", icon: Droplets },
     { title: t("nav.marketEstimator"), url: "/market-estimator", icon: DollarSign },
     { title: t("nav.pestIdentifier"), url: "/pest-identifier", icon: Bug },
+    { title: "Fertilizer Planner", url: "/fertilizer-planner", icon: Leaf },
     { title: t("nav.resources"), url: "/resources", icon: BookOpen },
   ];
 

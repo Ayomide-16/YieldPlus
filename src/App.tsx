@@ -13,6 +13,7 @@ import WaterUsageOptimizer from "./pages/WaterUsageOptimizer";
 import MarketPriceEstimator from "./pages/MarketPriceEstimator";
 import ComprehensivePlan from "./pages/ComprehensivePlan";
 import PestIdentifier from "./pages/PestIdentifier";
+import FertilizerPlanner from "./pages/FertilizerPlanner";
 import Resources from "./pages/Resources";
 import MyPlans from "./pages/MyPlans";
 import MyFarms from "./pages/MyFarms";
@@ -44,6 +45,7 @@ const App = () => (
                     <Route path="/market-estimator" element={<MarketPriceEstimator />} />
                     <Route path="/comprehensive-plan" element={<ComprehensivePlan />} />
                     <Route path="/pest-identifier" element={<PestIdentifier />} />
+                    <Route path="/fertilizer-planner" element={<FertilizerPlanner />} />
                     <Route path="/resources" element={<Resources />} />
                     <Route path="/my-plans" element={<MyPlans />} />
                     <Route path="/my-farms" element={<MyFarms />} />

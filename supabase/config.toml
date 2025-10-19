@@ -15,6 +15,9 @@ verify_jwt = false
 [functions.get-climate-data]
 verify_jwt = false
 
+[functions.analyze-fertilizer]
+verify_jwt = false
+
 [functions.identify-pest]
 verify_jwt = false
 

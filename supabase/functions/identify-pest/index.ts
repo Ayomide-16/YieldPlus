@@ -26,19 +26,21 @@ serve(async (req) => {
     const userPrompt = `Diagnose pest or disease for ${cropType} with these symptoms: ${symptoms.join(', ')}
     Location: ${JSON.stringify(location)}
     
-    Provide analysis in JSON format:
+    You MUST respond with ONLY valid JSON. No markdown, no code blocks, no explanations outside the JSON structure.
+    
+    Provide analysis in this exact JSON format:
     {
       "diagnosis": {
         "primary": {
-          "name": "Disease/Pest Name",
+          "name": "Disease or Pest Name",
           "scientificName": "Scientific name",
-          "confidence": "high/medium/low",
-          "description": "Brief description"
+          "confidence": "high",
+          "description": "Clear description of the pest/disease"
         },
         "alternatives": [
           {
-            "name": "Alternative diagnosis",
-            "confidence": "percentage",
+            "name": "Alternative diagnosis name",
+            "confidence": "medium",
             "description": "Brief description"
           }
         ]
@@ -47,13 +49,17 @@ serve(async (req) => {
         "observed": ["symptom1", "symptom2"],
         "expected": ["additional symptoms to watch for"]
       },
+      "causes": {
+        "primary": "Main cause of the disease/pest",
+        "contributing": ["Environmental factors", "Management practices"]
+      },
       "treatment": {
         "immediate": [
           {
-            "action": "Step-by-step action",
+            "action": "Clear step-by-step action",
             "materials": ["locally available materials"],
-            "cost": "estimated cost",
-            "effectiveness": "high/medium/low"
+            "cost": "estimated cost in local currency",
+            "effectiveness": "high"
           }
         ],
         "preventive": [
@@ -66,7 +72,7 @@ serve(async (req) => {
         "organic": ["organic treatment options"],
         "chemical": [
           {
-            "product": "Product name or type",
+            "product": "Product name or generic type",
             "dosage": "Amount per area",
             "safety": "Safety precautions"
           }
@@ -87,13 +93,13 @@ serve(async (req) => {
           "title": "Resource title",
           "source": "Organization name",
           "url": "URL to resource",
-          "type": "guide/video/article"
+          "type": "guide"
         }
       ],
       "expertAdvice": "When to seek professional help"
     }
     
-    Focus on practical, affordable solutions suitable for African farmers.`;
+    Focus on practical, affordable solutions suitable for African farmers. Use locally available materials and cost-effective methods.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -117,8 +123,19 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const analysis = data.choices[0].message.content;
-    console.log('Pest identification completed successfully');
+    let analysis = data.choices[0].message.content;
+    
+    // Clean up the response to ensure valid JSON
+    analysis = analysis.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    
+    // Validate JSON
+    try {
+      JSON.parse(analysis);
+      console.log('Pest identification completed successfully');
+    } catch (parseError) {
+      console.error('Invalid JSON in response:', analysis);
+      throw new Error('AI returned invalid JSON format');
+    }
 
     return new Response(JSON.stringify({ analysis }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

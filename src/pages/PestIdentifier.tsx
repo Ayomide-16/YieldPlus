@@ -11,10 +11,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Bug, Loader2, AlertTriangle, Leaf, ShieldCheck } from "lucide-react";
+import { Bug, Loader2, AlertTriangle, Leaf, ShieldCheck, Upload, DollarSign } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import LocationSelector from "@/components/LocationSelector";
+import DataSources from "@/components/DataSources";
 
 const commonSymptoms = [
   "Yellowing leaves", "Brown spots", "Wilting", "Holes in leaves", 
@@ -35,6 +36,8 @@ const PestIdentifier = () => {
   const [location, setLocation] = useState({ country: "", state: "", localGovernment: "" });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<any>(null);
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
 
   const handleSymptomToggle = (symptom: string) => {
     setSelectedSymptoms(prev =>
@@ -48,6 +51,18 @@ const PestIdentifier = () => {
     if (customSymptom.trim()) {
       setSelectedSymptoms([...selectedSymptoms, customSymptom.trim()]);
       setCustomSymptom("");
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -74,7 +89,14 @@ const PestIdentifier = () => {
 
       if (error) throw error;
 
-      const parsedAnalysis = JSON.parse(data.analysis);
+      let parsedAnalysis;
+      try {
+        parsedAnalysis = JSON.parse(data.analysis);
+      } catch (parseError) {
+        console.error('JSON Parse Error:', parseError, 'Raw data:', data.analysis);
+        throw new Error('Failed to parse analysis data. Please try again.');
+      }
+      
       setAnalysis(parsedAnalysis);
 
       if (user) {
@@ -192,6 +214,32 @@ const PestIdentifier = () => {
                   </div>
                 </div>
 
+                <div className="space-y-2">
+                  <Label>Upload Plant Image (Optional)</Label>
+                  <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="image-upload"
+                    />
+                    <label htmlFor="image-upload" className="cursor-pointer">
+                      {imagePreview ? (
+                        <div className="space-y-2">
+                          <img src={imagePreview} alt="Plant preview" className="max-h-48 mx-auto rounded" />
+                          <p className="text-sm text-muted-foreground">Click to change image</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">Click to upload plant image</p>
+                        </div>
+                      )}
+                    </label>
+                  </div>
+                </div>
+
                 {selectedSymptoms.length > 0 && (
                   <div className="space-y-2">
                     <Label>Selected Symptoms:</Label>
@@ -216,7 +264,6 @@ const PestIdentifier = () => {
               </CardContent>
             </Card>
 
-            {analysis && (
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
@@ -226,14 +273,39 @@ const PestIdentifier = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div>
-                      <h3 className="font-semibold text-lg">{analysis.diagnosis?.primary?.name}</h3>
-                      <p className="text-sm text-muted-foreground italic">
+                    <div className="p-4 rounded-lg bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950 dark:to-red-950 border-l-4 border-orange-500">
+                      <h3 className="font-bold text-xl mb-1">{analysis.diagnosis?.primary?.name}</h3>
+                      <p className="text-sm italic text-muted-foreground mb-3">
                         {analysis.diagnosis?.primary?.scientificName}
                       </p>
-                      <Badge className="mt-2">{analysis.diagnosis?.primary?.confidence} confidence</Badge>
-                      <p className="mt-3">{analysis.diagnosis?.primary?.description}</p>
+                      <Badge className="mb-3" variant={
+                        analysis.diagnosis?.primary?.confidence === 'high' ? 'default' :
+                        analysis.diagnosis?.primary?.confidence === 'medium' ? 'secondary' : 'outline'
+                      }>
+                        {analysis.diagnosis?.primary?.confidence} confidence
+                      </Badge>
+                      <p className="mt-2 leading-relaxed">{analysis.diagnosis?.primary?.description}</p>
                     </div>
+
+                    {analysis.causes && (
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">Causes</h4>
+                        <div className="p-3 rounded-lg bg-muted">
+                          <p className="font-medium text-sm mb-2">Primary Cause:</p>
+                          <p className="text-sm">{analysis.causes.primary}</p>
+                          {analysis.causes.contributing && analysis.causes.contributing.length > 0 && (
+                            <>
+                              <p className="font-medium text-sm mt-3 mb-2">Contributing Factors:</p>
+                              <ul className="list-disc list-inside text-sm space-y-1">
+                                {analysis.causes.contributing.map((factor: string, idx: number) => (
+                                  <li key={idx}>{factor}</li>
+                                ))}
+                              </ul>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -247,13 +319,27 @@ const PestIdentifier = () => {
                   <CardContent className="space-y-4">
                     {analysis.treatment?.immediate && (
                       <div>
-                        <h4 className="font-semibold mb-2">Immediate Actions:</h4>
+                        <h4 className="font-semibold mb-3 flex items-center gap-2 text-red-600 dark:text-red-400">
+                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 text-xs font-bold">!</span>
+                          Immediate Actions Required
+                        </h4>
                         {analysis.treatment.immediate.map((action: any, idx: number) => (
-                          <Alert key={idx} className="mb-2">
+                          <Alert key={idx} className="mb-3 border-l-4 border-red-500">
                             <AlertDescription>
-                              <p className="font-medium">{action.action}</p>
-                              <p className="text-sm mt-1">Materials: {action.materials?.join(', ')}</p>
-                              <p className="text-sm">Cost: {action.cost}</p>
+                              <p className="font-semibold text-base mb-2">{action.action}</p>
+                              <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
+                                <div>
+                                  <p className="text-muted-foreground">Materials:</p>
+                                  <p className="font-medium">{action.materials?.join(', ')}</p>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground">Est. Cost:</p>
+                                  <p className="font-medium">{action.cost}</p>
+                                </div>
+                              </div>
+                              <Badge className="mt-2" variant={action.effectiveness === 'high' ? 'default' : 'secondary'}>
+                                {action.effectiveness} effectiveness
+                              </Badge>
                             </AlertDescription>
                           </Alert>
                         ))}
@@ -262,14 +348,37 @@ const PestIdentifier = () => {
 
                     <Separator />
 
-                    {analysis.treatment?.organic && (
-                      <div>
-                        <h4 className="font-semibold mb-2">Organic Solutions:</h4>
-                        <ul className="list-disc list-inside space-y-1">
+                    {analysis.treatment?.organic && analysis.treatment.organic.length > 0 && (
+                      <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
+                        <h4 className="font-semibold mb-3 flex items-center gap-2 text-green-700 dark:text-green-300">
+                          <Leaf className="h-4 w-4" />
+                          Organic Solutions (Eco-Friendly)
+                        </h4>
+                        <ul className="space-y-2">
                           {analysis.treatment.organic.map((solution: string, idx: number) => (
-                            <li key={idx} className="text-sm">{solution}</li>
+                            <li key={idx} className="flex items-start gap-2">
+                              <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 mt-2"></span>
+                              <span className="text-sm">{solution}</span>
+                            </li>
                           ))}
                         </ul>
+                      </div>
+                    )}
+
+                    {analysis.treatment?.chemical && analysis.treatment.chemical.length > 0 && (
+                      <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800">
+                        <h4 className="font-semibold mb-3 text-blue-700 dark:text-blue-300">Chemical Treatments</h4>
+                        {analysis.treatment.chemical.map((chem: any, idx: number) => (
+                          <div key={idx} className="mb-3 last:mb-0">
+                            <p className="font-medium text-sm">{chem.product}</p>
+                            <p className="text-xs text-muted-foreground mt-1">Dosage: {chem.dosage}</p>
+                            <Alert className="mt-2 bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700">
+                              <AlertDescription className="text-xs">
+                                ⚠️ {chem.safety}
+                              </AlertDescription>
+                            </Alert>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </CardContent>
@@ -279,50 +388,88 @@ const PestIdentifier = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <ShieldCheck className="h-5 w-5 text-blue-500" />
-                      Prevention
+                      Prevention Measures
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     {analysis.treatment?.preventive && (
-                      <ul className="space-y-2">
+                      <div className="space-y-3">
                         {analysis.treatment.preventive.map((measure: any, idx: number) => (
-                          <li key={idx} className="border-l-2 border-primary pl-3">
-                            <p className="font-medium">{measure.measure}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {measure.timing} - {measure.frequency}
-                            </p>
-                          </li>
+                          <div key={idx} className="border-l-4 border-blue-500 pl-4 py-2 bg-muted/50 rounded-r">
+                            <p className="font-semibold">{measure.measure}</p>
+                            <div className="flex gap-4 mt-1 text-sm text-muted-foreground">
+                              <span>⏰ {measure.timing}</span>
+                              <span>🔄 {measure.frequency}</span>
+                            </div>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     )}
                   </CardContent>
                 </Card>
 
-                {analysis.resources && analysis.resources.length > 0 && (
+                {analysis.lifecycle && (
                   <Card>
                     <CardHeader>
-                      <CardTitle>Additional Resources</CardTitle>
+                      <CardTitle>Pest/Disease Lifecycle</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        {analysis.resources.map((resource: any, idx: number) => (
-                          <a
-                            key={idx}
-                            href={resource.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
-                          >
-                            <p className="font-medium">{resource.title}</p>
-                            <p className="text-sm text-muted-foreground">{resource.source}</p>
-                          </a>
-                        ))}
+                    <CardContent className="space-y-2">
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="text-center p-3 rounded-lg bg-muted">
+                          <p className="text-xs text-muted-foreground mb-1">Duration</p>
+                          <p className="font-bold">{analysis.lifecycle.duration}</p>
+                        </div>
+                        <div className="text-center p-3 rounded-lg bg-muted">
+                          <p className="text-xs text-muted-foreground mb-1">Spread Rate</p>
+                          <p className="font-bold">{analysis.lifecycle.spreadRate}</p>
+                        </div>
+                        <div className="text-center p-3 rounded-lg bg-muted">
+                          <p className="text-xs text-muted-foreground mb-1">Stages</p>
+                          <p className="font-bold">{analysis.lifecycle.stages?.length || 0}</p>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
                 )}
+
+                {analysis.economicImpact && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <DollarSign className="h-5 w-5 text-yellow-500" />
+                        Economic Impact
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center p-3 rounded-lg bg-red-50 dark:bg-red-950">
+                          <span className="text-sm font-medium">Potential Loss</span>
+                          <span className="font-bold text-red-600 dark:text-red-400">{analysis.economicImpact.potentialLoss}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 rounded-lg bg-blue-50 dark:bg-blue-950">
+                          <span className="text-sm font-medium">Treatment Cost</span>
+                          <span className="font-bold text-blue-600 dark:text-blue-400">{analysis.economicImpact.costOfTreatment}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 rounded-lg bg-orange-50 dark:bg-orange-950">
+                          <span className="text-sm font-medium">Yield Impact</span>
+                          <span className="font-bold text-orange-600 dark:text-orange-400">{analysis.economicImpact.yieldImpact}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {analysis.expertAdvice && (
+                  <Alert>
+                    <AlertDescription>
+                      <p className="font-semibold mb-1">Expert Consultation Recommended:</p>
+                      <p className="text-sm">{analysis.expertAdvice}</p>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {analysis.resources && <DataSources sources={analysis.resources} />}
               </div>
-            )}
           </div>
         </div>
       </div>
