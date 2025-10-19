@@ -19,6 +19,7 @@ export const UnitSelector = ({ value, onChange, label = "Unit" }: UnitSelectorPr
           <SelectItem value="hectares">Hectares (ha)</SelectItem>
           <SelectItem value="acres">Acres</SelectItem>
           <SelectItem value="square_meters">Square Meters (m²)</SelectItem>
+          <SelectItem value="plots">Plots</SelectItem>
         </SelectContent>
       </Select>
     </div>
@@ -31,6 +32,8 @@ export const convertToHectares = (value: number, unit: string): number => {
       return value * 0.404686;
     case "square_meters":
       return value / 10000;
+    case "plots":
+      return value * 0.0405; // 1 plot ≈ 0.0405 hectares (approximately 50ft x 100ft)
     case "hectares":
     default:
       return value;

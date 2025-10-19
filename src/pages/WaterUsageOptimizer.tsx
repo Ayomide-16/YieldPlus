@@ -14,10 +14,13 @@ import ToolSuggestions from "@/components/ToolSuggestions";
 import DataSources from "@/components/DataSources";
 import ClimateRecommendations from "@/components/ClimateRecommendations";
 import RainPrediction from "@/components/RainPrediction";
+import { UnitSelector, convertToHectares } from "@/components/UnitSelector";
+import { Printer } from "lucide-react";
 
 const WaterUsageOptimizer = () => {
   const [waterSource, setWaterSource] = useState("");
   const [farmSize, setFarmSize] = useState("");
+  const [farmSizeUnit, setFarmSizeUnit] = useState("hectares");
   const [cropTypes, setCropTypes] = useState<string[]>([]);
   const [irrigationMethod, setIrrigationMethod] = useState("");
   const [showResults, setShowResults] = useState(false);
@@ -90,9 +93,12 @@ const WaterUsageOptimizer = () => {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="farmSize">Farm Size (plots) *</Label>
-                <Input id="farmSize" type="number" placeholder="e.g., 10" value={farmSize} onChange={(e) => setFarmSize(e.target.value)} />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="farmSize">Farm Size *</Label>
+                  <Input id="farmSize" type="number" placeholder="e.g., 10" value={farmSize} onChange={(e) => setFarmSize(e.target.value)} />
+                </div>
+                <UnitSelector value={farmSizeUnit} onChange={setFarmSizeUnit} label="Unit *" />
               </div>
 
               <div className="space-y-2">
@@ -121,6 +127,13 @@ const WaterUsageOptimizer = () => {
 
           {showResults && analysis && (
             <div className="space-y-6">
+              <Card className="shadow-[var(--shadow-card)]">
+                <CardContent className="pt-6">
+                  <Button onClick={() => window.print()} variant="outline" className="w-full">
+                    <Printer className="mr-2 h-4 w-4" />Print Water Optimization Plan
+                  </Button>
+                </CardContent>
+              </Card>
               {analysis.summary && (
                 <Card className="shadow-[var(--shadow-card)]">
                   <CardHeader><CardTitle>Summary</CardTitle></CardHeader>

@@ -14,6 +14,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { useFarmData } from "@/contexts/FarmDataContext";
 import ToolSuggestions from "@/components/ToolSuggestions";
 import DataSources from "@/components/DataSources";
+import { Printer } from "lucide-react";
 import ClimateRecommendations from "@/components/ClimateRecommendations";
 
 const CropPlanner = () => {
@@ -128,8 +129,15 @@ const CropPlanner = () => {
             </Card>
           )}
 
-          {showResults && analysis && (
-            <div className="space-y-6">
+              {showResults && analysis && (
+                <div className="space-y-6">
+                  <Card className="shadow-[var(--shadow-card)]">
+                    <CardContent className="pt-6">
+                      <Button onClick={() => window.print()} variant="outline" className="w-full">
+                        <Printer className="mr-2 h-4 w-4" />Print Crop Planning Report
+                      </Button>
+                    </CardContent>
+                  </Card>
               {analysis.error && (
                 <Card className="border-destructive shadow-[var(--shadow-card)]">
                   <CardHeader>

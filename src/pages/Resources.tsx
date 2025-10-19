@@ -20,10 +20,87 @@ const Resources = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   
-  const [pdfs, setPdfs] = useState<any[]>([]);
-  const [news, setNews] = useState<any[]>([]);
+  // Mock data for PDFs
+  const mockPdfs = [
+    {
+      id: '1',
+      title: 'Soil Management Essentials',
+      description: 'Short guide on improving soil health through composting, crop rotation, and pH management',
+      category: 'Soil Management',
+      file_url: '#'
+    },
+    {
+      id: '2',
+      title: 'Efficient Irrigation Techniques',
+      description: 'Learn water-saving methods including drip irrigation, mulching, and timing strategies',
+      category: 'Irrigation',
+      file_url: '#'
+    },
+    {
+      id: '3',
+      title: 'Crop Rotation Guide',
+      description: 'Maximize yields and soil health with proven crop rotation patterns',
+      category: 'Crop Management',
+      file_url: '#'
+    },
+    {
+      id: '4',
+      title: 'Natural Pest Control',
+      description: 'Organic methods for controlling common pests using local resources',
+      category: 'Pest Control',
+      file_url: '#'
+    }
+  ];
+
+  // Mock data for news
+  const mockNews = [
+    {
+      id: '1',
+      title: 'Fall Armyworm Alert in West Africa',
+      content: 'Agricultural ministries across West Africa have issued alerts about increased fall armyworm activity. Farmers are advised to monitor maize and sorghum fields closely and apply recommended treatments.',
+      published_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      source: 'Regional Agricultural Network',
+      category: 'Disease Alert'
+    },
+    {
+      id: '2',
+      title: 'Government Subsidy Program for Fertilizers',
+      content: 'The Ministry of Agriculture announces a 40% subsidy on NPK fertilizers for smallholder farmers. Application forms available at local agricultural offices.',
+      published_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      source: 'Ministry of Agriculture',
+      category: 'Government Program'
+    },
+    {
+      id: '3',
+      title: 'Favorable Rainfall Forecast for Planting Season',
+      content: 'Meteorological services predict above-average rainfall in the coming months, creating excellent conditions for planting. Farmers should prepare for early planting.',
+      published_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      source: 'National Weather Service',
+      category: 'Weather'
+    },
+    {
+      id: '4',
+      title: 'NGO Offers Free Training on Modern Farming',
+      content: 'AgriCare Foundation launches free training programs on precision agriculture, covering drip irrigation, greenhouse farming, and digital farm management tools.',
+      published_date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+      source: 'AgriCare Foundation',
+      category: 'Training'
+    }
+  ];
+
+  // Mock data for regional experts
+  const mockExperts = [
+    { region: 'North', name: 'Dr. Amina Hassan', specialty: 'Crop Pathology', phone: '+234-801-234-5678', email: 'amina.hassan@agriexpert.ng' },
+    { region: 'South', name: 'Mr. Chidi Okonkwo', specialty: 'Soil Science', phone: '+234-802-345-6789', email: 'chidi.okonkwo@agriexpert.ng' },
+    { region: 'East', name: 'Dr. Grace Mwangi', specialty: 'Pest Management', phone: '+234-803-456-7890', email: 'grace.mwangi@agriexpert.ng' },
+    { region: 'West', name: 'Prof. Ibrahim Bello', specialty: 'Irrigation Systems', phone: '+234-804-567-8901', email: 'ibrahim.bello@agriexpert.ng' },
+    { region: 'Central', name: 'Dr. Fatima Adamu', specialty: 'Crop Nutrition', phone: '+234-805-678-9012', email: 'fatima.adamu@agriexpert.ng' }
+  ];
+  
+  const [pdfs, setPdfs] = useState<any[]>(mockPdfs);
+  const [news, setNews] = useState<any[]>(mockNews);
   const [consultations, setConsultations] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   
   // Expert consultation form
   const [subject, setSubject] = useState("");
@@ -32,27 +109,10 @@ const Resources = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    loadResources();
     if (user) {
       loadConsultations();
     }
   }, [user]);
-
-  const loadResources = async () => {
-    try {
-      const [{ data: pdfData }, { data: newsData }] = await Promise.all([
-        supabase.from('agricultural_resources').select('*').order('created_at', { ascending: false }),
-        supabase.from('agricultural_news').select('*').order('published_date', { ascending: false }).limit(20)
-      ]);
-
-      setPdfs(pdfData || []);
-      setNews(newsData || []);
-    } catch (error) {
-      console.error('Error loading resources:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const loadConsultations = async () => {
     const { data } = await supabase
@@ -219,6 +279,35 @@ const Resources = () => {
             </TabsContent>
 
             <TabsContent value="expert" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Local Agricultural Experts</CardTitle>
+                  <CardDescription>Contact information for regional agricultural specialists</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    {mockExperts.map((expert, idx) => (
+                      <div key={idx} className="p-4 rounded-lg bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/10">
+                        <div className="flex items-start gap-3">
+                          <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                            <Users className="h-6 w-6 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold">{expert.name}</h4>
+                            <p className="text-sm text-muted-foreground">{expert.specialty}</p>
+                            <Badge variant="secondary" className="mt-1 mb-2">{expert.region} Region</Badge>
+                            <div className="space-y-1 text-xs">
+                              <p>📞 {expert.phone}</p>
+                              <p>✉️ {expert.email}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
               <Card>
                 <CardHeader>
                   <CardTitle>Request Expert Consultation</CardTitle>

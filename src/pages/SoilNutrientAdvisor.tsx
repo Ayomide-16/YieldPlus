@@ -15,6 +15,8 @@ import { useFarmData } from "@/contexts/FarmDataContext";
 import ToolSuggestions from "@/components/ToolSuggestions";
 import DataSources from "@/components/DataSources";
 import ClimateRecommendations from "@/components/ClimateRecommendations";
+import { UnitSelector, convertToHectares } from "@/components/UnitSelector";
+import { Printer } from "lucide-react";
 
 const SoilNutrientAdvisor = () => {
   const [color, setColor] = useState("");
@@ -24,6 +26,8 @@ const SoilNutrientAdvisor = () => {
   const [imagePreview, setImagePreview] = useState<string>("");
   const [soilPH, setSoilPH] = useState("");
   const [soilCompactness, setSoilCompactness] = useState("");
+  const [farmSize, setFarmSize] = useState("");
+  const [farmSizeUnit, setFarmSizeUnit] = useState("hectares");
   const [showResults, setShowResults] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<any>(null);
@@ -183,6 +187,14 @@ const SoilNutrientAdvisor = () => {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="farmSize">Farm Size (Optional)</Label>
+                  <Input id="farmSize" type="number" placeholder="e.g., 10" value={farmSize} onChange={(e) => setFarmSize(e.target.value)} />
+                </div>
+                <UnitSelector value={farmSizeUnit} onChange={setFarmSizeUnit} label="Unit" />
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="soilPH">Soil pH (Optional)</Label>
@@ -238,6 +250,13 @@ const SoilNutrientAdvisor = () => {
 
           {showResults && analysis && (
             <div className="space-y-6">
+              <Card className="shadow-[var(--shadow-card)]">
+                <CardContent className="pt-6">
+                  <Button onClick={() => window.print()} variant="outline" className="w-full">
+                    <Printer className="mr-2 h-4 w-4" />Print Soil Analysis Report
+                  </Button>
+                </CardContent>
+              </Card>
               {analysis.summary && (
                 <Card className="shadow-[var(--shadow-card)]">
                   <CardHeader><CardTitle>Summary</CardTitle></CardHeader>

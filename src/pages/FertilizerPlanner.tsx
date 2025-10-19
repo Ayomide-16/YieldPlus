@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import LocationSelector from "@/components/LocationSelector";
 import { UnitSelector, convertToHectares } from "@/components/UnitSelector";
 import DataSources from "@/components/DataSources";
+import { Printer } from "lucide-react";
 
 const FertilizerPlanner = () => {
   const { user } = useAuth();
@@ -174,6 +175,13 @@ const FertilizerPlanner = () => {
 
             {analysis && (
               <div className="space-y-6">
+                <Card>
+                  <CardContent className="pt-6">
+                    <Button onClick={() => window.print()} variant="outline" className="w-full">
+                      <Printer className="mr-2 h-4 w-4" />Print Fertilizer Plan
+                    </Button>
+                  </CardContent>
+                </Card>
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">

@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from "recharts";
 import DataSources from "@/components/DataSources";
 import ClimateRecommendations from "@/components/ClimateRecommendations";
+import { Printer } from "lucide-react";
 
 const ComprehensivePlan = () => {
   const { user } = useAuth();
@@ -433,6 +434,14 @@ const ComprehensivePlan = () => {
                   <CardTitle className="text-2xl">{t('farmPlanner.yourPlan')}</CardTitle>
                   <CardDescription>AI-generated comprehensive farm plan with climate insights</CardDescription>
                 </CardHeader>
+              </Card>
+
+              <Card className="shadow-[var(--shadow-card)]">
+                <CardContent className="pt-6">
+                  <Button onClick={() => window.print()} variant="outline" className="w-full">
+                    <Printer className="mr-2 h-4 w-4" />Print Comprehensive Farm Plan
+                  </Button>
+                </CardContent>
               </Card>
 
               {/* Executive Summary */}

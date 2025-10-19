@@ -14,10 +14,13 @@ import { useFarmData } from "@/contexts/FarmDataContext";
 import ToolSuggestions from "@/components/ToolSuggestions";
 import DataSources from "@/components/DataSources";
 import ClimateRecommendations from "@/components/ClimateRecommendations";
+import { UnitSelector, convertToHectares } from "@/components/UnitSelector";
+import { Printer } from "lucide-react";
 
 const MarketPriceEstimator = () => {
   const [cropType, setCropType] = useState("");
   const [expectedYield, setExpectedYield] = useState("");
+  const [expectedYieldUnit, setExpectedYieldUnit] = useState("hectares");
   const [location, setLocation] = useState({ country: "", state: "", localGovernment: "" });
   const [harvestDate, setHarvestDate] = useState("");
   const [showResults, setShowResults] = useState(false);
@@ -83,9 +86,12 @@ const MarketPriceEstimator = () => {
                 <Input id="cropType" placeholder="e.g., Maize, Rice, Tomatoes" value={cropType} onChange={(e) => setCropType(e.target.value)} />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="expectedYield">Expected Yield (kg) *</Label>
-                <Input id="expectedYield" type="number" placeholder="e.g., 5000" value={expectedYield} onChange={(e) => setExpectedYield(e.target.value)} />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="expectedYield">Expected Yield *</Label>
+                  <Input id="expectedYield" type="number" placeholder="e.g., 5000" value={expectedYield} onChange={(e) => setExpectedYield(e.target.value)} />
+                </div>
+                <UnitSelector value={expectedYieldUnit} onChange={setExpectedYieldUnit} label="Farm Size Unit *" />
               </div>
 
               <div className="space-y-2">
@@ -101,6 +107,13 @@ const MarketPriceEstimator = () => {
 
           {showResults && analysis && (
             <div className="space-y-6">
+              <Card className="shadow-[var(--shadow-card)]">
+                <CardContent className="pt-6">
+                  <Button onClick={() => window.print()} variant="outline" className="w-full">
+                    <Printer className="mr-2 h-4 w-4" />Print Market Analysis Report
+                  </Button>
+                </CardContent>
+              </Card>
               {analysis.error && (
                 <Card className="shadow-[var(--shadow-card)] border-destructive/50 bg-destructive/5">
                   <CardHeader><CardTitle className="text-destructive">Invalid Crop</CardTitle></CardHeader>

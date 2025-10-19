@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Bug, Loader2, AlertTriangle, Leaf, ShieldCheck, Upload, DollarSign } from "lucide-react";
+import { Bug, Loader2, AlertTriangle, Leaf, ShieldCheck, Upload, DollarSign, Printer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import LocationSelector from "@/components/LocationSelector";
@@ -91,10 +91,17 @@ const PestIdentifier = () => {
 
       let parsedAnalysis;
       try {
-        parsedAnalysis = JSON.parse(data.analysis);
+        let cleanedAnalysis = data.analysis.trim();
+        cleanedAnalysis = cleanedAnalysis.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+        parsedAnalysis = JSON.parse(cleanedAnalysis);
       } catch (parseError) {
         console.error('JSON Parse Error:', parseError, 'Raw data:', data.analysis);
-        throw new Error('Failed to parse analysis data. Please try again.');
+        toast({
+          title: "Error",
+          description: "Failed to parse analysis. Please try again.",
+          variant: "destructive"
+        });
+        return;
       }
       
       setAnalysis(parsedAnalysis);
@@ -265,14 +272,24 @@ const PestIdentifier = () => {
             </Card>
 
               <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-orange-500" />
-                      Diagnosis
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
+                {analysis ? (
+                  <>
+                    <Card className="shadow-[var(--shadow-card)]">
+                      <CardContent className="pt-6">
+                        <Button onClick={() => window.print()} variant="outline" className="w-full">
+                          <Printer className="mr-2 h-4 w-4" />Print Pest Analysis Report
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <AlertTriangle className="h-5 w-5 text-orange-500" />
+                          Diagnosis
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
                     <div className="p-4 rounded-lg bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950 dark:to-red-950 border-l-4 border-orange-500">
                       <h3 className="font-bold text-xl mb-1">{analysis.diagnosis?.primary?.name}</h3>
                       <p className="text-sm italic text-muted-foreground mb-3">
@@ -306,10 +323,10 @@ const PestIdentifier = () => {
                         </div>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
 
-                <Card>
+                  <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Leaf className="h-5 w-5 text-green-500" />
@@ -469,9 +486,11 @@ const PestIdentifier = () => {
                 )}
 
                 {analysis.resources && <DataSources sources={analysis.resources} />}
-              </div>
+              </>
+            ) : null}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
