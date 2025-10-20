@@ -7,6 +7,7 @@
     "marketEstimator": "Market Insights",
     "comprehensivePlan": "Farm Planner",
     "pestIdentifier": "Pest & Disease Identifier",
+    "fertilizerPlanner": "Fertilizer Planner",
     "resources": "Resources",
     "myPlans": "My Plans",
     "myFarms": "My Farms"
@@ -30,15 +31,43 @@
     },
     "waterOptimizer": {
       "title": "Water Management",
-      "description": "Optimize water usage with intelligent irrigation scheduling and conservation strategies"
+      "description": "Optimize water usage with intelligent irrigation scheduling and conservation strategies",
+      "location": "Location",
+      "cropType": "Crop Type",
+      "farmSize": "Farm Size",
+      "irrigationMethod": "Irrigation Method",
+      "waterSource": "Water Source",
+      "soilType": "Soil Type",
+      "analyze": "Analyze Water Usage",
+      "analyzing": "Analyzing...",
+      "results": "Water Management Recommendations",
+      "irrigationSchedule": "Irrigation Schedule",
+      "waterConservation": "Water Conservation Tips",
+      "costAnalysis": "Cost Analysis"
     },
     "marketEstimator": {
       "title": "Market Intelligence",
-      "description": "Get real-time market price estimates and optimal selling strategies for your crops"
+      "description": "Get real-time market price estimates and optimal selling strategies for your crops",
+      "cropType": "Crop Type",
+      "expectedYield": "Expected Yield (optional)",
+      "yieldUnit": "Yield Unit",
+      "farmSize": "Farm Size",
+      "harvestDate": "Expected Harvest Date",
+      "location": "Location",
+      "estimate": "Estimate Price",
+      "estimating": "Estimating...",
+      "results": "Market Price Estimate",
+      "currentPrice": "Current Market Price",
+      "priceRange": "Price Range",
+      "sellingStrategy": "Optimal Selling Strategy"
     },
     "pestIdentifier": {
       "title": "Pest & Disease Identifier",
       "description": "Identify pests and diseases affecting your crops and get treatment recommendations"
+    },
+    "fertilizerPlanner": {
+      "title": "Fertilizer Planner",
+      "description": "Get personalized fertilizer recommendations based on your crop, soil, and location"
     }
   },
   "auth": {
@@ -47,7 +76,7 @@
     "signOut": "Sign Out",
     "email": "Email",
     "password": "Password",
-    "welcome": "Welcome to Ceres.ai",
+    "welcome": "Welcome to YieldPlus.ai",
     "required": "Authentication Required",
     "pleaseSignIn": "Please sign in to access this feature"
   },

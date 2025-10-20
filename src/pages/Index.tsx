@@ -1,12 +1,24 @@
 import { Link } from "react-router-dom";
 import { Sprout, Droplet, TrendingUp, TestTube, Tractor, Bug, BookOpen } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import heroImage from "@/assets/hero-farmland.jpg";
+import africanFarm1 from "@/assets/african-farm-1.jpg";
+import africanFarm2 from "@/assets/african-farm-2.jpg";
+import africanFarm3 from "@/assets/african-farm-3.jpg";
 
 const Index = () => {
   const { t } = useTranslation();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const heroImages = [africanFarm1, africanFarm2, africanFarm3];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
   
   const mainTool = {
     title: "Comprehensive Farm Planner",
@@ -72,14 +84,14 @@ const Index = () => {
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div 
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 opacity-20 transition-opacity duration-1000"
           style={{
-            backgroundImage: `url(${heroImage})`,
+            backgroundImage: `url(${heroImages[currentImageIndex]})`,
             backgroundSize: "cover",
             backgroundPosition: "center"
           }}
         />
-        <div className="relative container mx-auto px-4 py-20 sm:py-28">
+        <div className="relative container mx-auto px-4 py-20 sm:py-28 z-10">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-block mb-4">
               <Sprout className="h-16 w-16 text-primary animate-fade-in" />
@@ -94,6 +106,20 @@ const Index = () => {
               <Link to="/comprehensive-plan">{t("home.getStarted")}</Link>
             </Button>
           </div>
+        </div>
+        
+        {/* Slideshow indicators */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
+          {heroImages.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentImageIndex(index)}
+              className={`w-3 h-3 rounded-full transition-all ${
+                index === currentImageIndex ? 'bg-primary w-8' : 'bg-primary/30'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
         </div>
       </div>
 
