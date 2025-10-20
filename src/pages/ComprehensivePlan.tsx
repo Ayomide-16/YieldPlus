@@ -37,7 +37,6 @@ const ComprehensivePlan = () => {
   
   // Plan configuration
   const [plantingMonth, setPlantingMonth] = useState("");
-  const [preferredPlantingDate, setPreferredPlantingDate] = useState("");
   const [includeSections, setIncludeSections] = useState({
     crop: true,
     soil: true,
@@ -122,14 +121,19 @@ const ComprehensivePlan = () => {
     setIsGenerating(true);
 
     try {
+      // Derive planting date from month (use 15th of the selected month)
+      const currentYear = new Date().getFullYear();
+      const monthIndex = months.indexOf(plantingMonth);
+      const derivedPlantingDate = new Date(currentYear, monthIndex, 15).toISOString().split('T')[0];
+      
       // Step 1: Get climate data
       console.log('Fetching climate data...');
       const { data: climateResponse, error: climateError } = await supabase.functions.invoke('get-climate-data', {
         body: {
           latitude: 6.5244, // Default for Nigeria, should be derived from location
           longitude: 3.3792,
-          startDate: preferredPlantingDate,
-          endDate: new Date(new Date(preferredPlantingDate).getTime() + 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          startDate: derivedPlantingDate,
+          endDate: new Date(new Date(derivedPlantingDate).getTime() + 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
         }
       });
 
@@ -154,7 +158,7 @@ const ComprehensivePlan = () => {
       const { data: planResponse, error: planError } = await supabase.functions.invoke('generate-comprehensive-plan', {
         body: {
           farmData: farm,
-          preferredPlantingDate,
+          preferredPlantingDate: derivedPlantingDate,
           climateData: parsedClimate,
           includeSections
         }
@@ -187,7 +191,7 @@ const ComprehensivePlan = () => {
           farm_id: selectedFarm,
           user_id: user?.id,
           plan_name: `${farm.farm_name} - ${plantingMonth} ${new Date().getFullYear()}`,
-          preferred_planting_date: preferredPlantingDate,
+          preferred_planting_date: derivedPlantingDate,
           included_sections: includeSections,
           climate_data: parsedClimate,
           comprehensive_summary: parsedPlan
@@ -353,29 +357,19 @@ const ComprehensivePlan = () => {
                 <CardDescription>Customize your comprehensive farm plan</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      {t('farmPlanner.plantingMonth')} *
-                    </Label>
-                    <Select value={plantingMonth} onValueChange={setPlantingMonth}>
-                      <SelectTrigger><SelectValue placeholder="Select month" /></SelectTrigger>
-                      <SelectContent>
-                        {months.map(month => (
-                          <SelectItem key={month} value={month}>{month}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Preferred Planting Date *</Label>
-                    <Input 
-                      type="date" 
-                      value={preferredPlantingDate} 
-                      onChange={(e) => setPreferredPlantingDate(e.target.value)} 
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {t('farmPlanner.plantingMonth')} *
+                  </Label>
+                  <Select value={plantingMonth} onValueChange={setPlantingMonth}>
+                    <SelectTrigger><SelectValue placeholder="Select month" /></SelectTrigger>
+                    <SelectContent>
+                      {months.map(month => (
+                        <SelectItem key={month} value={month}>{month}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-3">
