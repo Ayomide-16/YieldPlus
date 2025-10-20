@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Droplet, Loader2 } from "lucide-react";
+import LocationSelector from "@/components/LocationSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
@@ -21,6 +22,7 @@ const WaterUsageOptimizer = () => {
   const [waterSource, setWaterSource] = useState("");
   const [farmSize, setFarmSize] = useState("");
   const [farmSizeUnit, setFarmSizeUnit] = useState("hectares");
+  const [location, setLocation] = useState({ country: "", state: "", localGovernment: "" });
   const [cropTypes, setCropTypes] = useState<string[]>([]);
   const [irrigationMethod, setIrrigationMethod] = useState("");
   const [showResults, setShowResults] = useState(false);
@@ -30,7 +32,7 @@ const WaterUsageOptimizer = () => {
   const { farmData, updateFarmData } = useFarmData();
 
   const handleOptimize = async () => {
-    if (!waterSource || !farmSize || cropTypes.length === 0 || !irrigationMethod) {
+    if (!waterSource || !farmSize || cropTypes.length === 0 || !irrigationMethod || !location.country) {
       toast({ title: "Missing Information", description: "Please fill all required fields", variant: "destructive" });
       return;
     }
@@ -39,8 +41,16 @@ const WaterUsageOptimizer = () => {
     setShowResults(false);
 
     try {
+      const farmSizeInHectares = convertToHectares(parseFloat(farmSize), farmSizeUnit);
+      
       const { data, error } = await supabase.functions.invoke('analyze-water', {
-        body: { waterSource, farmSize, cropTypes, irrigationMethod }
+        body: { 
+          waterSource, 
+          farmSize: farmSizeInHectares, 
+          cropTypes, 
+          irrigationMethod,
+          location 
+        }
       });
 
       if (error) throw error;
@@ -79,6 +89,8 @@ const WaterUsageOptimizer = () => {
               <CardDescription>Tell us about your water supply and farm</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              <LocationSelector location={location} onLocationChange={setLocation} />
+              
               <div className="space-y-2">
                 <Label htmlFor="waterSource">Water Source *</Label>
                 <Select value={waterSource} onValueChange={setWaterSource}>

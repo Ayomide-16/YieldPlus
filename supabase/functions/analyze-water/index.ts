@@ -11,15 +11,28 @@ serve(async (req) => {
   }
 
   try {
-    const { waterSource, farmSize, cropTypes, irrigationMethod } = await req.json();
-    console.log('Analyzing water usage for:', { waterSource, farmSize, cropTypes, irrigationMethod });
+    const { waterSource, farmSize, cropTypes, irrigationMethod, location } = await req.json();
+    console.log('Analyzing water usage for:', { waterSource, farmSize, cropTypes, irrigationMethod, location });
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const systemPrompt = `You are an expert in agricultural water management with access to NASA POWER and NOAA NCEI climate data. Provide comprehensive, data-rich analysis with extensive usage breakdowns, savings projections, rain predictions, and chart data in JSON format. Always cite reputable sources and include climate-based irrigation recommendations.`;
+    // Determine local currency based on location
+    const currencyMap: Record<string, string> = {
+      'Nigeria': '₦',
+      'Kenya': 'KSh',
+      'Ghana': '₵',
+      'South Africa': 'R',
+      'Tanzania': 'TSh',
+      'Uganda': 'USh',
+      'Ethiopia': 'Br',
+      'default': '$'
+    };
+    const currency = currencyMap[location?.country] || currencyMap.default;
+
+    const systemPrompt = `You are an expert in agricultural water management with access to NASA POWER and NOAA NCEI climate data. Provide comprehensive, data-rich analysis with extensive usage breakdowns, savings projections, rain predictions, and chart data in JSON format. Always cite reputable sources and include climate-based irrigation recommendations. Use ${currency} for all cost calculations.`;
 
     const userPrompt = `Analyze water usage for the following farm conditions and provide optimization recommendations:
     
@@ -27,8 +40,10 @@ serve(async (req) => {
     Farm Size: ${farmSize} hectares
     Crop Types: ${cropTypes.join(', ')}
     Current Irrigation Method: ${irrigationMethod}
+    Location: ${location?.country}, ${location?.state || ''}
+    Currency: ${currency}
     
-    Provide comprehensive analysis in JSON format with these exact keys:
+    Provide comprehensive analysis in JSON format with these exact keys (use ${currency} for all costs):
     {
       "summary": "Brief overview including current weather and rain predictions",
       "currentUsage": {"estimatedDaily": "X liters", "estimatedMonthly": "X liters", "estimatedYearly": "X liters", "efficiency": "75%", "costPerMonth": "$500", "wastePercentage": "25%"},

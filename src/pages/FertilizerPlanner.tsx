@@ -28,6 +28,11 @@ const FertilizerPlanner = () => {
   const [farmSizeUnit, setFarmSizeUnit] = useState("hectares");
   const [plantingMonth, setPlantingMonth] = useState("");
   const [location, setLocation] = useState({ country: "", state: "", localGovernment: "" });
+  const [soilPH, setSoilPH] = useState("");
+  const [nitrogen, setNitrogen] = useState("");
+  const [phosphorus, setPhosphorus] = useState("");
+  const [potassium, setPotassium] = useState("");
+  const [organicMatter, setOrganicMatter] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<any>(null);
 
@@ -44,13 +49,21 @@ const FertilizerPlanner = () => {
     setIsAnalyzing(true);
 
     try {
+      const farmSizeInHectares = convertToHectares(parseFloat(farmSize), farmSizeUnit);
+      
       const { data, error } = await supabase.functions.invoke('analyze-fertilizer', {
         body: {
           cropType,
-          farmSize: parseFloat(farmSize),
-          farmSizeUnit,
+          farmSize: farmSizeInHectares,
           plantingMonth,
-          location
+          location,
+          soilData: {
+            pH: soilPH ? parseFloat(soilPH) : null,
+            nitrogen: nitrogen ? parseFloat(nitrogen) : null,
+            phosphorus: phosphorus ? parseFloat(phosphorus) : null,
+            potassium: potassium ? parseFloat(potassium) : null,
+            organicMatter: organicMatter ? parseFloat(organicMatter) : null
+          }
         }
       });
 
@@ -162,6 +175,73 @@ const FertilizerPlanner = () => {
                 </div>
 
                 <LocationSelector location={location} onLocationChange={setLocation} />
+
+                <Separator className="my-4" />
+                
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold">Soil Analysis (Optional)</h3>
+                  <p className="text-xs text-muted-foreground">Provide soil test results for more accurate recommendations</p>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Soil pH</Label>
+                      <Input
+                        type="number"
+                        value={soilPH}
+                        onChange={(e) => setSoilPH(e.target.value)}
+                        placeholder="e.g., 6.5"
+                        min="0"
+                        max="14"
+                        step="0.1"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Nitrogen (ppm)</Label>
+                      <Input
+                        type="number"
+                        value={nitrogen}
+                        onChange={(e) => setNitrogen(e.target.value)}
+                        placeholder="e.g., 45"
+                        min="0"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Phosphorus (ppm)</Label>
+                      <Input
+                        type="number"
+                        value={phosphorus}
+                        onChange={(e) => setPhosphorus(e.target.value)}
+                        placeholder="e.g., 30"
+                        min="0"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Potassium (ppm)</Label>
+                      <Input
+                        type="number"
+                        value={potassium}
+                        onChange={(e) => setPotassium(e.target.value)}
+                        placeholder="e.g., 150"
+                        min="0"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Organic Matter (%)</Label>
+                      <Input
+                        type="number"
+                        value={organicMatter}
+                        onChange={(e) => setOrganicMatter(e.target.value)}
+                        placeholder="e.g., 3.5"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                      />
+                    </div>
+                  </div>
+                </div>
 
                 <Button onClick={handleAnalyze} className="w-full" disabled={isAnalyzing}>
                   {isAnalyzing ? (

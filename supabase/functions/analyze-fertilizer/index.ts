@@ -11,35 +11,52 @@ serve(async (req) => {
   }
 
   try {
-    const { cropType, farmSize, farmSizeUnit, plantingMonth, location } = await req.json();
-    console.log('Analyzing fertilizer needs for:', { cropType, farmSize, farmSizeUnit, plantingMonth, location });
+    const { cropType, farmSize, plantingMonth, location, soilData } = await req.json();
+    console.log('Analyzing fertilizer needs for:', { cropType, farmSize, plantingMonth, location, soilData });
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    // Convert farm size to hectares for consistent calculations
-    let farmSizeHa = farmSize;
-    if (farmSizeUnit === 'acres') {
-      farmSizeHa = farmSize * 0.404686;
-    } else if (farmSizeUnit === 'square_meters') {
-      farmSizeHa = farmSize / 10000;
-    }
+    // Determine local currency
+    const currencyMap: Record<string, string> = {
+      'Nigeria': '₦',
+      'Kenya': 'KSh',
+      'Ghana': '₵',
+      'South Africa': 'R',
+      'Tanzania': 'TSh',
+      'Uganda': 'USh',
+      'Ethiopia': 'Br',
+      'default': '$'
+    };
+    const currency = currencyMap[location?.country] || currencyMap.default;
 
     const systemPrompt = `You are an expert agricultural scientist specializing in soil fertility and fertilizer management in Africa.
-    Provide region-specific, cost-effective fertilizer recommendations based on crop requirements and local availability.
-    Always cite reputable sources like FAO, IFDC, AGRA, and national agricultural research institutes.`;
+    Provide region-specific, cost-effective fertilizer recommendations based on crop requirements, soil test data, and local availability.
+    Always cite reputable sources like FAO, IFDC, AGRA, and national agricultural research institutes. Use ${currency} for all cost calculations.`;
 
     const userPrompt = `Create a comprehensive fertilizer plan for ${cropType} cultivation.
     Farm details:
-    - Size: ${farmSize} ${farmSizeUnit} (${farmSizeHa.toFixed(2)} hectares)
+    - Size: ${farmSize} hectares
     - Planting month: ${plantingMonth}
     - Location: ${JSON.stringify(location)}
+    ${soilData && (soilData.pH || soilData.nitrogen || soilData.phosphorus || soilData.potassium || soilData.organicMatter) ? 
+      `- Soil Test Results:
+        ${soilData.pH ? `  pH: ${soilData.pH}` : ''}
+        ${soilData.nitrogen ? `  Nitrogen: ${soilData.nitrogen} ppm` : ''}
+        ${soilData.phosphorus ? `  Phosphorus: ${soilData.phosphorus} ppm` : ''}
+        ${soilData.potassium ? `  Potassium: ${soilData.potassium} ppm` : ''}
+        ${soilData.organicMatter ? `  Organic Matter: ${soilData.organicMatter}%` : ''}` : ''}
+    - Currency: ${currency}
+    
+    ${soilData && (soilData.pH || soilData.nitrogen) ? 
+      'IMPORTANT: Use the provided soil test data to adjust fertilizer recommendations. If nutrients are already high, reduce recommended amounts accordingly.' : 
+      'Note: No soil test data provided. Base recommendations on typical requirements for this crop and region.'}
     
     You MUST respond with ONLY valid JSON. No markdown, no code blocks, no explanations outside the JSON structure.
     
-    Provide fertilizer recommendations in this exact JSON format:
+    Provide fertilizer recommendations in this exact JSON format (use ${currency} for all costs):
     {
       "cropNutrientRequirements": {
         "nitrogen": "Amount in kg/ha",

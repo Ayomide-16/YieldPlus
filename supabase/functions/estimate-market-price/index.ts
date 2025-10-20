@@ -11,29 +11,43 @@ serve(async (req) => {
   }
 
   try {
-    const { cropType, expectedYield, location, harvestDate } = await req.json();
-    console.log('Estimating market prices for:', { cropType, expectedYield, location, harvestDate });
+    const { cropType, expectedYield, yieldUnit, farmSize, location, harvestDate } = await req.json();
+    console.log('Estimating market prices for:', { cropType, expectedYield, yieldUnit, farmSize, location, harvestDate });
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const systemPrompt = `You are an expert agricultural economist with access to FAO, World Bank, national agricultural market data, and climate data from NASA POWER and NOAA NCEI. Provide comprehensive, data-rich market analysis with extensive historical data, forecasts, seasonal climate context, profitability analysis, and chart data in JSON format. Always cite reputable sources. If the crop type is invalid or doesn't exist, return an error message with suggestions.`;
+    // Determine local currency
+    const currencyMap: Record<string, string> = {
+      'Nigeria': '₦',
+      'Kenya': 'KSh',
+      'Ghana': '₵',
+      'South Africa': 'R',
+      'Tanzania': 'TSh',
+      'Uganda': 'USh',
+      'Ethiopia': 'Br',
+      'default': '$'
+    };
+    const currency = currencyMap[location?.country] || currencyMap.default;
+
+    const systemPrompt = `You are an expert agricultural economist with access to FAO, World Bank, national agricultural market data, and climate data from NASA POWER and NOAA NCEI. Provide comprehensive, data-rich market analysis with extensive historical data, forecasts, seasonal climate context, profitability analysis, and chart data in JSON format. Always cite reputable sources. If the crop type is invalid or doesn't exist, return an error message with suggestions. Use ${currency} for all price calculations.`;
 
     const userPrompt = `Estimate market prices and provide selling strategy for:
     
     Crop Type: ${cropType}
-    Expected Yield: ${expectedYield} kg
+    ${expectedYield ? `Expected Yield: ${expectedYield} ${yieldUnit}` : `Farm Size: ${farmSize} hectares (auto-predict yield based on average productivity)`}
     Location: ${location.country}, ${location.state}, ${location.localGovernment}
     Expected Harvest Date: ${harvestDate}
+    Currency: ${currency}
     
     IMPORTANT: First, verify if "${cropType}" is a valid, real crop. If it's not a real crop or you're unsure about it, return ONLY this structure:
     {
       "error": "The crop '${cropType}' is not recognized as a valid agricultural crop. Please enter a valid crop name such as: Maize, Rice, Wheat, Cassava, Yam, Soybeans, Tomatoes, etc."
     }
     
-    If it IS a valid crop, provide comprehensive analysis in JSON format with these exact keys:
+    If it IS a valid crop, provide comprehensive analysis in JSON format (use ${currency} for all prices) with these exact keys:
     {
       "summary": "Brief market overview with seasonal climate context",
       "priceEstimate": {"lowPrice": "₦X/kg", "averagePrice": "₦X/kg", "highPrice": "₦X/kg", "forecastAccuracy": "85%", "totalRevenue": "₦X", "pricePerTon": "₦X/ton"},

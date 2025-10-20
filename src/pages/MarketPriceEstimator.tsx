@@ -20,7 +20,9 @@ import { Printer } from "lucide-react";
 const MarketPriceEstimator = () => {
   const [cropType, setCropType] = useState("");
   const [expectedYield, setExpectedYield] = useState("");
-  const [expectedYieldUnit, setExpectedYieldUnit] = useState("hectares");
+  const [yieldUnit, setYieldUnit] = useState("kg");
+  const [farmSize, setFarmSize] = useState("");
+  const [farmSizeUnit, setFarmSizeUnit] = useState("hectares");
   const [location, setLocation] = useState({ country: "", state: "", localGovernment: "" });
   const [harvestDate, setHarvestDate] = useState("");
   const [showResults, setShowResults] = useState(false);
@@ -30,7 +32,7 @@ const MarketPriceEstimator = () => {
   const { farmData, updateFarmData } = useFarmData();
 
   const handleEstimate = async () => {
-    if (!cropType || !expectedYield || !location.country || !location.state || !harvestDate) {
+    if (!cropType || !location.country || !location.state || !harvestDate || !farmSize) {
       toast({ title: "Missing Information", description: "Please fill all required fields", variant: "destructive" });
       return;
     }
@@ -39,8 +41,17 @@ const MarketPriceEstimator = () => {
     setShowResults(false);
 
     try {
+      const farmSizeInHectares = convertToHectares(parseFloat(farmSize), farmSizeUnit);
+      
       const { data, error } = await supabase.functions.invoke('estimate-market-price', {
-        body: { cropType, expectedYield, location, harvestDate }
+        body: { 
+          cropType, 
+          expectedYield: expectedYield || null, // Optional - will auto-predict if not provided
+          yieldUnit,
+          farmSize: farmSizeInHectares,
+          location, 
+          harvestDate 
+        }
       });
 
       if (error) throw error;
@@ -88,10 +99,30 @@ const MarketPriceEstimator = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="expectedYield">Expected Yield *</Label>
-                  <Input id="expectedYield" type="number" placeholder="e.g., 5000" value={expectedYield} onChange={(e) => setExpectedYield(e.target.value)} />
+                  <Label htmlFor="farmSize">Farm Size *</Label>
+                  <Input id="farmSize" type="number" placeholder="e.g., 10" value={farmSize} onChange={(e) => setFarmSize(e.target.value)} />
                 </div>
-                <UnitSelector value={expectedYieldUnit} onChange={setExpectedYieldUnit} label="Farm Size Unit *" />
+                <UnitSelector value={farmSizeUnit} onChange={setFarmSizeUnit} label="Farm Size Unit *" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="expectedYield">Expected Yield (optional)</Label>
+                  <Input id="expectedYield" type="number" placeholder="e.g., 5000" value={expectedYield} onChange={(e) => setExpectedYield(e.target.value)} />
+                  <p className="text-xs text-muted-foreground">Leave blank for auto-prediction</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="yieldUnit">Yield Unit</Label>
+                  <Select value={yieldUnit} onValueChange={setYieldUnit}>
+                    <SelectTrigger id="yieldUnit"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mudus">Mudus</SelectItem>
+                      <SelectItem value="kg">Kilograms (kg)</SelectItem>
+                      <SelectItem value="tons">Tons</SelectItem>
+                      <SelectItem value="bags">Bags</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="space-y-2">
