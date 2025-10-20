@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      agricultural_experts: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          location: string
+          name: string
+          phone: string
+          specialization: string
+          updated_at: string | null
+          whatsapp_link: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          location: string
+          name: string
+          phone: string
+          specialization: string
+          updated_at?: string | null
+          whatsapp_link?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          location?: string
+          name?: string
+          phone?: string
+          specialization?: string
+          updated_at?: string | null
+          whatsapp_link?: string | null
+        }
+        Relationships: []
+      }
       agricultural_news: {
         Row: {
           category: string
@@ -47,39 +83,84 @@ export type Database = {
         }
         Relationships: []
       }
+      agricultural_news_feed: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          location: string | null
+          published_date: string | null
+          source_name: string
+          source_url: string
+          summary: string
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          location?: string | null
+          published_date?: string | null
+          source_name: string
+          source_url: string
+          summary: string
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          location?: string | null
+          published_date?: string | null
+          source_name?: string
+          source_url?: string
+          summary?: string
+          title?: string
+        }
+        Relationships: []
+      }
       agricultural_resources: {
         Row: {
           category: string
           created_at: string | null
           description: string | null
+          file_size: number | null
+          file_type: string | null
           file_url: string
           id: string
           language: string | null
           tags: string[] | null
           title: string
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           category: string
           created_at?: string | null
           description?: string | null
+          file_size?: number | null
+          file_type?: string | null
           file_url: string
           id?: string
           language?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           category?: string
           created_at?: string | null
           description?: string | null
+          file_size?: number | null
+          file_type?: string | null
           file_url?: string
           id?: string
           language?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
