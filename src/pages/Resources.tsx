@@ -10,9 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { BookOpen, Newspaper, Users, FileText, Send, Loader2 } from "lucide-react";
+import { BookOpen, Newspaper, Users, FileText, Send, Loader2, Upload, Trash2, Phone, Mail, MessageCircle, Plus, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import LocationSelector from "@/components/LocationSelector";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 
 const Resources = () => {
   const { user } = useAuth();
@@ -97,10 +99,14 @@ const Resources = () => {
     { region: 'Central', name: 'Dr. Fatima Adamu', specialty: 'Crop Nutrition', phone: '+234-805-678-9012', email: 'fatima.adamu@agriexpert.ng' }
   ];
   
-  const [pdfs, setPdfs] = useState<any[]>(mockPdfs);
-  const [news, setNews] = useState<any[]>(mockNews);
+  const [pdfs, setPdfs] = useState<any[]>([]);
+  const [news, setNews] = useState<any[]>([]);
+  const [experts, setExperts] = useState<any[]>([]);
   const [consultations, setConsultations] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingNews, setLoadingNews] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [location, setLocation] = useState({ country: "", state: "", localGovernment: "" });
   
   // Expert consultation form
   const [subject, setSubject] = useState("");
@@ -108,11 +114,107 @@ const Resources = () => {
   const [urgency, setUrgency] = useState("medium");
   const [submitting, setSubmitting] = useState(false);
 
+  // PDF upload
+  const [uploadingPDF, setUploadingPDF] = useState(false);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [pdfTitle, setPdfTitle] = useState("");
+  const [pdfDescription, setPdfDescription] = useState("");
+  const [pdfCategory, setPdfCategory] = useState("");
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+
+  // Expert management
+  const [showExpertDialog, setShowExpertDialog] = useState(false);
+  const [expertName, setExpertName] = useState("");
+  const [expertSpec, setExpertSpec] = useState("");
+  const [expertLocation, setExpertLocation] = useState("");
+  const [expertPhone, setExpertPhone] = useState("");
+  const [expertEmail, setExpertEmail] = useState("");
+  const [expertWhatsApp, setExpertWhatsApp] = useState("");
+
   useEffect(() => {
     if (user) {
       loadConsultations();
+      loadResources();
+      loadExperts();
+      loadNews();
+      checkAdmin();
     }
   }, [user]);
+
+  const checkAdmin = async () => {
+    const { data } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user?.id)
+      .single();
+    
+    setIsAdmin(data?.role === 'admin');
+  };
+
+  const loadResources = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from('agricultural_resources')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    setPdfs(data || []);
+    setLoading(false);
+  };
+
+  const loadExperts = async () => {
+    const { data } = await supabase
+      .from('agricultural_experts')
+      .select('*')
+      .order('location', { ascending: true });
+    
+    setExperts(data || []);
+  };
+
+  const loadNews = async () => {
+    const { data } = await supabase
+      .from('agricultural_news_feed')
+      .select('*')
+      .order('published_date', { ascending: false })
+      .limit(10);
+    
+    setNews(data || []);
+  };
+
+  const fetchAINews = async () => {
+    if (!location.country) {
+      toast({
+        title: "Location Required",
+        description: "Please select your location to fetch relevant news",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoadingNews(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-agriculture-news', {
+        body: { location }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Latest agricultural news loaded"
+      });
+      
+      loadNews();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch news",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingNews(false);
+    }
+  };
 
   const loadConsultations = async () => {
     const { data } = await supabase
@@ -121,6 +223,167 @@ const Resources = () => {
       .order('created_at', { ascending: false });
     
     setConsultations(data || []);
+  };
+
+  const handleUploadPDF = async () => {
+    if (!pdfFile || !pdfTitle || !pdfCategory) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUploadingPDF(true);
+    try {
+      // Upload to storage
+      const filePath = `${user?.id}/${Date.now()}_${pdfFile.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('study-materials')
+        .upload(filePath, pdfFile);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('study-materials')
+        .getPublicUrl(filePath);
+
+      // Save metadata to database
+      const { error: dbError } = await supabase
+        .from('agricultural_resources')
+        .insert({
+          user_id: user?.id,
+          title: pdfTitle,
+          description: pdfDescription,
+          category: pdfCategory,
+          file_url: publicUrl,
+          file_type: pdfFile.type,
+          file_size: pdfFile.size
+        });
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: "Success",
+        description: "PDF uploaded successfully"
+      });
+
+      setPdfFile(null);
+      setPdfTitle("");
+      setPdfDescription("");
+      setPdfCategory("");
+      setShowUploadDialog(false);
+      loadResources();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingPDF(false);
+    }
+  };
+
+  const handleDeletePDF = async (id: string, fileUrl: string) => {
+    try {
+      // Delete from storage
+      const filePath = fileUrl.split('/').pop();
+      if (filePath) {
+        await supabase.storage.from('study-materials').remove([filePath]);
+      }
+
+      // Delete from database
+      const { error } = await supabase
+        .from('agricultural_resources')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "PDF deleted successfully"
+      });
+      loadResources();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleCreateExpert = async () => {
+    if (!expertName || !expertSpec || !expertLocation || !expertPhone || !expertEmail) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('agricultural_experts')
+        .insert({
+          name: expertName,
+          specialization: expertSpec,
+          location: expertLocation,
+          phone: expertPhone,
+          email: expertEmail,
+          whatsapp_link: expertWhatsApp
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Expert added successfully"
+      });
+
+      setExpertName("");
+      setExpertSpec("");
+      setExpertLocation("");
+      setExpertPhone("");
+      setExpertEmail("");
+      setExpertWhatsApp("");
+      setShowExpertDialog(false);
+      loadExperts();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteExpert = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('agricultural_experts')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Expert removed successfully"
+      });
+      loadExperts();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   const handleSubmitConsultation = async () => {
@@ -210,6 +473,59 @@ const Resources = () => {
             </TabsList>
 
             <TabsContent value="pdfs" className="space-y-4">
+              {isAdmin && (
+                <Card className="border-primary/20">
+                  <CardContent className="pt-6">
+                    <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+                      <DialogTrigger asChild>
+                        <Button className="w-full">
+                          <Upload className="mr-2 h-4 w-4" />Upload New Study Material
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Upload PDF Study Material</DialogTitle>
+                          <DialogDescription>Add a new educational resource for farmers</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>PDF File *</Label>
+                            <Input type="file" accept="application/pdf" onChange={(e) => setPdfFile(e.target.files?.[0] || null)} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Title *</Label>
+                            <Input value={pdfTitle} onChange={(e) => setPdfTitle(e.target.value)} placeholder="Document title" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Description</Label>
+                            <Textarea value={pdfDescription} onChange={(e) => setPdfDescription(e.target.value)} placeholder="Brief description" rows={3} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Category *</Label>
+                            <Select value={pdfCategory} onValueChange={setPdfCategory}>
+                              <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Soil Management">Soil Management</SelectItem>
+                                <SelectItem value="Irrigation">Irrigation</SelectItem>
+                                <SelectItem value="Crop Management">Crop Management</SelectItem>
+                                <SelectItem value="Pest Control">Pest Control</SelectItem>
+                                <SelectItem value="Marketing">Marketing</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setShowUploadDialog(false)}>Cancel</Button>
+                          <Button onClick={handleUploadPDF} disabled={uploadingPDF}>
+                            {uploadingPDF ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Uploading...</> : 'Upload'}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </CardContent>
+                </Card>
+              )}
+
               {loading ? (
                 <div className="flex justify-center p-8">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -229,14 +545,20 @@ const Resources = () => {
                           <CardTitle>{pdf.title}</CardTitle>
                           <CardDescription>{pdf.description}</CardDescription>
                         </div>
-                        <Badge>{pdf.category}</Badge>
+                        <div className="flex gap-2 items-center">
+                          <Badge>{pdf.category}</Badge>
+                          {isAdmin && pdf.user_id === user?.id && (
+                            <Button variant="destructive" size="sm" onClick={() => handleDeletePDF(pdf.id, pdf.file_url)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent>
                       <a href={pdf.file_url} target="_blank" rel="noopener noreferrer">
                         <Button variant="outline" className="w-full">
-                          <FileText className="mr-2 h-4 w-4" />
-                          View Document
+                          <FileText className="mr-2 h-4 w-4" />View Document
                         </Button>
                       </a>
                     </CardContent>
@@ -246,14 +568,19 @@ const Resources = () => {
             </TabsContent>
 
             <TabsContent value="news" className="space-y-4">
-              {loading ? (
-                <div className="flex justify-center p-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : news.length === 0 ? (
+              <Card className="border-primary/20">
+                <CardContent className="pt-6 space-y-4">
+                  <LocationSelector location={location} onLocationChange={setLocation} />
+                  <Button onClick={fetchAINews} className="w-full" disabled={loadingNews}>
+                    {loadingNews ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Fetching News...</> : <><Newspaper className="mr-2 h-4 w-4" />Fetch Latest Agricultural News</>}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {news.length === 0 ? (
                 <Card>
                   <CardContent className="pt-6 text-center text-muted-foreground">
-                    No news available yet
+                    No news available. Select your location and fetch news.
                   </CardContent>
                 </Card>
               ) : (
@@ -264,14 +591,19 @@ const Resources = () => {
                         <div>
                           <CardTitle>{item.title}</CardTitle>
                           <CardDescription>
-                            {new Date(item.published_date).toLocaleDateString()} • {item.source}
+                            {new Date(item.published_date).toLocaleDateString()} • {item.source_name}
                           </CardDescription>
                         </div>
                         <Badge variant="secondary">{item.category}</Badge>
                       </div>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-sm">{item.content}</p>
+                    <CardContent className="space-y-2">
+                      <p className="text-sm">{item.summary}</p>
+                      <a href={item.source_url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="link" className="p-0 h-auto">
+                          Read full article <ExternalLink className="ml-1 h-3 w-3" />
+                        </Button>
+                      </a>
                     </CardContent>
                   </Card>
                 ))
@@ -279,6 +611,56 @@ const Resources = () => {
             </TabsContent>
 
             <TabsContent value="expert" className="space-y-6">
+              {isAdmin && (
+                <Card className="border-primary/20">
+                  <CardContent className="pt-6">
+                    <Dialog open={showExpertDialog} onOpenChange={setShowExpertDialog}>
+                      <DialogTrigger asChild>
+                        <Button className="w-full">
+                          <Plus className="mr-2 h-4 w-4" />Add New Expert
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Add Agricultural Expert</DialogTitle>
+                          <DialogDescription>Add a new expert to the directory</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Name *</Label>
+                            <Input value={expertName} onChange={(e) => setExpertName(e.target.value)} placeholder="Dr. John Doe" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Specialization *</Label>
+                            <Input value={expertSpec} onChange={(e) => setExpertSpec(e.target.value)} placeholder="Crop Pathology" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Location *</Label>
+                            <Input value={expertLocation} onChange={(e) => setExpertLocation(e.target.value)} placeholder="North Region" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Phone *</Label>
+                            <Input value={expertPhone} onChange={(e) => setExpertPhone(e.target.value)} placeholder="+234-801-234-5678" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Email *</Label>
+                            <Input type="email" value={expertEmail} onChange={(e) => setExpertEmail(e.target.value)} placeholder="expert@example.com" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>WhatsApp Link</Label>
+                            <Input value={expertWhatsApp} onChange={(e) => setExpertWhatsApp(e.target.value)} placeholder="https://wa.me/..." />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setShowExpertDialog(false)}>Cancel</Button>
+                          <Button onClick={handleCreateExpert}>Add Expert</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </CardContent>
+                </Card>
+              )}
+
               <Card>
                 <CardHeader>
                   <CardTitle>Local Agricultural Experts</CardTitle>
@@ -286,19 +668,43 @@ const Resources = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    {mockExperts.map((expert, idx) => (
-                      <div key={idx} className="p-4 rounded-lg bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/10">
+                    {experts.map((expert) => (
+                      <div key={expert.id} className="p-4 rounded-lg bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/10">
                         <div className="flex items-start gap-3">
                           <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                             <Users className="h-6 w-6 text-primary" />
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-semibold">{expert.name}</h4>
-                            <p className="text-sm text-muted-foreground">{expert.specialty}</p>
-                            <Badge variant="secondary" className="mt-1 mb-2">{expert.region} Region</Badge>
-                            <div className="space-y-1 text-xs">
-                              <p>📞 {expert.phone}</p>
-                              <p>✉️ {expert.email}</p>
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h4 className="font-semibold">{expert.name}</h4>
+                                <p className="text-sm text-muted-foreground">{expert.specialization}</p>
+                                <Badge variant="secondary" className="mt-1 mb-2">{expert.location}</Badge>
+                              </div>
+                              {isAdmin && (
+                                <Button variant="destructive" size="sm" onClick={() => handleDeleteExpert(expert.id)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                            <div className="space-y-2 mt-3">
+                              <a href={`tel:${expert.phone}`}>
+                                <Button variant="outline" size="sm" className="w-full justify-start">
+                                  <Phone className="mr-2 h-3 w-3" />{expert.phone}
+                                </Button>
+                              </a>
+                              <a href={`mailto:${expert.email}`}>
+                                <Button variant="outline" size="sm" className="w-full justify-start">
+                                  <Mail className="mr-2 h-3 w-3" />{expert.email}
+                                </Button>
+                              </a>
+                              {expert.whatsapp_link && (
+                                <a href={expert.whatsapp_link} target="_blank" rel="noopener noreferrer">
+                                  <Button variant="outline" size="sm" className="w-full justify-start bg-green-50 hover:bg-green-100 text-green-700">
+                                    <MessageCircle className="mr-2 h-3 w-3" />WhatsApp
+                                  </Button>
+                                </a>
+                              )}
                             </div>
                           </div>
                         </div>

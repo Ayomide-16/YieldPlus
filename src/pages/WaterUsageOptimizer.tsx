@@ -17,6 +17,8 @@ import ClimateRecommendations from "@/components/ClimateRecommendations";
 import RainPrediction from "@/components/RainPrediction";
 import { UnitSelector, convertToHectares } from "@/components/UnitSelector";
 import { Printer } from "lucide-react";
+import { SavePlanButton } from "@/components/SavePlanButton";
+import { IrrigationSchedule } from "@/components/IrrigationSchedule";
 
 const WaterUsageOptimizer = () => {
   const [waterSource, setWaterSource] = useState("");
@@ -140,10 +142,16 @@ const WaterUsageOptimizer = () => {
           {showResults && analysis && (
             <div className="space-y-6">
               <Card className="shadow-[var(--shadow-card)]">
-                <CardContent className="pt-6">
+                <CardContent className="pt-6 space-y-2">
                   <Button onClick={() => window.print()} variant="outline" className="w-full">
                     <Printer className="mr-2 h-4 w-4" />Print Water Optimization Plan
                   </Button>
+                  <SavePlanButton
+                    planType="water"
+                    planData={analysis}
+                    location={location}
+                    defaultName={`Water Plan - ${location.country || 'Farm'}`}
+                  />
                 </CardContent>
               </Card>
               {analysis.summary && (
@@ -204,31 +212,7 @@ const WaterUsageOptimizer = () => {
               )}
 
               {analysis.irrigationSchedule && (
-                <Card className="shadow-[var(--shadow-card)]">
-                  <CardHeader><CardTitle>Irrigation Schedule</CardTitle></CardHeader>
-                  <CardContent className="space-y-3">
-                    {Array.isArray(analysis.irrigationSchedule) ? (
-                      analysis.irrigationSchedule.map((schedule: any, idx: number) => (
-                        <div key={idx} className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-medium text-sm">{schedule.crop || schedule.period}</h4>
-                            <span className="text-xs text-muted-foreground">{schedule.frequency || schedule.timing}</span>
-                          </div>
-                          <div className="flex gap-2">
-                            <div className="flex-1 h-8 bg-primary rounded flex items-center justify-center text-xs text-white">
-                              {schedule.morning || 'Morning'}
-                            </div>
-                            <div className="flex-1 h-8 bg-primary/60 rounded flex items-center justify-center text-xs text-white">
-                              {schedule.evening || 'Evening'}
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-muted-foreground">{typeof analysis.irrigationSchedule === 'string' ? analysis.irrigationSchedule : JSON.stringify(analysis.irrigationSchedule)}</p>
-                    )}
-                  </CardContent>
-                </Card>
+                <IrrigationSchedule schedule={analysis.irrigationSchedule} />
               )}
 
               {analysis.monthlyProjection && (

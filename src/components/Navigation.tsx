@@ -24,7 +24,7 @@ const Navigation = () => {
             <SidebarTrigger />
             <Link to="/" className="flex items-center gap-2">
               <Sprout className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold text-foreground">Ceres.ai</span>
+              <span className="text-xl font-bold text-foreground">YieldPlus.ai</span>
             </Link>
           </div>
           

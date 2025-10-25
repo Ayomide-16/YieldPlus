@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import LocationSelector from "@/components/LocationSelector";
 import DataSources from "@/components/DataSources";
+import { SavePlanButton } from "@/components/SavePlanButton";
 
 const commonSymptoms = [
   "Yellowing leaves", "Brown spots", "Wilting", "Holes in leaves", 
@@ -275,10 +276,16 @@ const PestIdentifier = () => {
                 {analysis ? (
                   <>
                     <Card className="shadow-[var(--shadow-card)]">
-                      <CardContent className="pt-6">
+                      <CardContent className="pt-6 space-y-2">
                         <Button onClick={() => window.print()} variant="outline" className="w-full">
                           <Printer className="mr-2 h-4 w-4" />Print Pest Analysis Report
                         </Button>
+                        <SavePlanButton
+                          planType="pest"
+                          planData={analysis}
+                          location={location}
+                          defaultName={`Pest - ${cropType}`}
+                        />
                       </CardContent>
                     </Card>
 

@@ -16,6 +16,7 @@ import DataSources from "@/components/DataSources";
 import ClimateRecommendations from "@/components/ClimateRecommendations";
 import { UnitSelector, convertToHectares } from "@/components/UnitSelector";
 import { Printer } from "lucide-react";
+import { SavePlanButton } from "@/components/SavePlanButton";
 
 const MarketPriceEstimator = () => {
   const [cropType, setCropType] = useState("");
@@ -139,10 +140,16 @@ const MarketPriceEstimator = () => {
           {showResults && analysis && (
             <div className="space-y-6">
               <Card className="shadow-[var(--shadow-card)]">
-                <CardContent className="pt-6">
+                <CardContent className="pt-6 space-y-2">
                   <Button onClick={() => window.print()} variant="outline" className="w-full">
                     <Printer className="mr-2 h-4 w-4" />Print Market Analysis Report
                   </Button>
+                  <SavePlanButton
+                    planType="market"
+                    planData={analysis}
+                    location={location}
+                    defaultName={`Market - ${cropType}`}
+                  />
                 </CardContent>
               </Card>
               {analysis.error && (

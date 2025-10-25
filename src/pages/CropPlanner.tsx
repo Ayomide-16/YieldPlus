@@ -16,6 +16,7 @@ import ToolSuggestions from "@/components/ToolSuggestions";
 import DataSources from "@/components/DataSources";
 import { Printer } from "lucide-react";
 import ClimateRecommendations from "@/components/ClimateRecommendations";
+import { SavePlanButton } from "@/components/SavePlanButton";
 
 const CropPlanner = () => {
   const [location, setLocation] = useState({ country: "", state: "", localGovernment: "" });
@@ -132,10 +133,16 @@ const CropPlanner = () => {
               {showResults && analysis && (
                 <div className="space-y-6">
                   <Card className="shadow-[var(--shadow-card)]">
-                    <CardContent className="pt-6">
+                    <CardContent className="pt-6 space-y-2">
                       <Button onClick={() => window.print()} variant="outline" className="w-full">
                         <Printer className="mr-2 h-4 w-4" />Print Crop Planning Report
                       </Button>
+                      <SavePlanButton
+                        planType="crop"
+                        planData={analysis}
+                        location={location}
+                        defaultName={`${cropType} - ${location.country}`}
+                      />
                     </CardContent>
                   </Card>
               {analysis.error && (

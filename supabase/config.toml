@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.generate-comprehensive-plan]
 verify_jwt = false
+
+[functions.fetch-agriculture-news]
+verify_jwt = false
