@@ -7,6 +7,7 @@ import { Save, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 
 interface SavePlanButtonProps {
   planType: 'crop' | 'soil' | 'water' | 'market' | 'fertilizer' | 'pest' | 'comprehensive';
@@ -21,12 +22,13 @@ export const SavePlanButton = ({ planType, planData, location, defaultName }: Sa
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   const handleSave = async () => {
     if (!planName.trim()) {
       toast({
-        title: "Missing Name",
-        description: "Please enter a name for your plan",
+        title: t('savePlan.missingName'),
+        description: t('savePlan.enterName'),
         variant: "destructive"
       });
       return;
@@ -47,16 +49,16 @@ export const SavePlanButton = ({ planType, planData, location, defaultName }: Sa
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Plan saved successfully"
+        title: t('common.success'),
+        description: t('savePlan.savedSuccess')
       });
 
       setOpen(false);
       setPlanName("");
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to save plan",
+        title: t('common.error'),
+        description: error.message || t('savePlan.saveFailed'),
         variant: "destructive"
       });
     } finally {
@@ -70,34 +72,34 @@ export const SavePlanButton = ({ planType, planData, location, defaultName }: Sa
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="w-full">
-          <Save className="mr-2 h-4 w-4" />Save Plan
+          <Save className="mr-2 h-4 w-4" />{t('savePlan.button')}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Save Your Plan</DialogTitle>
+          <DialogTitle>{t('savePlan.title')}</DialogTitle>
           <DialogDescription>
-            Give your plan a name so you can easily find it later
+            {t('savePlan.description')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
-          <Label htmlFor="planName">Plan Name *</Label>
+          <Label htmlFor="planName">{t('savePlan.planName')} *</Label>
           <Input
             id="planName"
             value={planName}
             onChange={(e) => setPlanName(e.target.value)}
-            placeholder="e.g., Spring 2025 Maize Plan"
+            placeholder={t('savePlan.planNamePlaceholder')}
           />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={saving}>
             {saving ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</>
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('savePlan.saving')}</>
             ) : (
-              <><Save className="mr-2 h-4 w-4" />Save</>
+              <><Save className="mr-2 h-4 w-4" />{t('common.save')}</>
             )}
           </Button>
         </DialogFooter>

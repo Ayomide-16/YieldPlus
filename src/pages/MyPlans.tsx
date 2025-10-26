@@ -55,11 +55,11 @@ const MyPlans = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="max-w-md">
           <CardHeader>
-            <CardTitle>Authentication Required</CardTitle>
-            <CardDescription>Please sign in to view your saved plans</CardDescription>
+            <CardTitle>{t('myPlans.authRequired')}</CardTitle>
+            <CardDescription>{t('myPlans.signInPrompt')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => navigate('/auth')}>Sign In</Button>
+            <Button onClick={() => navigate('/auth')}>{t('auth.signIn')}</Button>
           </CardContent>
         </Card>
       </div>
@@ -79,30 +79,30 @@ const MyPlans = () => {
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">
-              My Saved Plans
+              {t('myPlans.title')}
             </h1>
             <p className="text-muted-foreground">
-              View and manage all your saved agricultural plans
+              {t('myPlans.subtitle')}
             </p>
           </div>
 
           <Tabs defaultValue="all" className="space-y-6">
             <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="all">All Plans ({plans.length})</TabsTrigger>
-              <TabsTrigger value="crop">Crop ({plansByType.crop.length})</TabsTrigger>
-              <TabsTrigger value="soil">Soil ({plansByType.soil.length})</TabsTrigger>
-              <TabsTrigger value="water">Water ({plansByType.water.length})</TabsTrigger>
-              <TabsTrigger value="market">Market ({plansByType.market.length})</TabsTrigger>
+              <TabsTrigger value="all">{t('myPlans.allPlans')} ({plans.length})</TabsTrigger>
+              <TabsTrigger value="crop">{t('myPlans.cropPlans')} ({plansByType.crop.length})</TabsTrigger>
+              <TabsTrigger value="soil">{t('myPlans.soilPlans')} ({plansByType.soil.length})</TabsTrigger>
+              <TabsTrigger value="water">{t('myPlans.waterPlans')} ({plansByType.water.length})</TabsTrigger>
+              <TabsTrigger value="market">{t('myPlans.marketPlans')} ({plansByType.market.length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="all" className="space-y-4">
               {loading ? (
-                <Card><CardContent className="p-8 text-center">Loading...</CardContent></Card>
+                <Card><CardContent className="p-8 text-center">{t('common.loading')}</CardContent></Card>
               ) : plans.length === 0 ? (
                 <Card>
                   <CardContent className="p-8 text-center">
-                    <p className="text-muted-foreground mb-4">No saved plans yet</p>
-                    <Button onClick={() => navigate('/crop-planner')}>Create Your First Plan</Button>
+                    <p className="text-muted-foreground mb-4">{t('myPlans.noPlans')}</p>
+                    <Button onClick={() => navigate('/crop-planner')}>{t('myPlans.createFirst')}</Button>
                   </CardContent>
                 </Card>
               ) : (
