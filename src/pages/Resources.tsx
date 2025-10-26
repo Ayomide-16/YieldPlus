@@ -460,15 +460,15 @@ const Resources = () => {
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="pdfs" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                Study Materials
+                {t("resources.tabs.studyMaterials")}
               </TabsTrigger>
               <TabsTrigger value="news" className="flex items-center gap-2">
                 <Newspaper className="h-4 w-4" />
-                News Feed
+                {t("resources.tabs.newsFeed")}
               </TabsTrigger>
               <TabsTrigger value="expert" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                Expert Help
+                {t("resources.tabs.expertHelp")}
               </TabsTrigger>
             </TabsList>
 
@@ -479,13 +479,13 @@ const Resources = () => {
                     <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
                       <DialogTrigger asChild>
                         <Button className="w-full">
-                          <Upload className="mr-2 h-4 w-4" />Upload New Study Material
+                          <Upload className="mr-2 h-4 w-4" />{t("resources.uploadPDF")}
                         </Button>
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          <DialogTitle>Upload PDF Study Material</DialogTitle>
-                          <DialogDescription>Add a new educational resource for farmers</DialogDescription>
+                          <DialogTitle>{t("resources.uploadPDFTitle")}</DialogTitle>
+                          <DialogDescription>{t("resources.uploadPDFDescription")}</DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4">
                           <div className="space-y-2">

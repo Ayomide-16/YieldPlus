@@ -1,13 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Droplets, Sun, Cloud, Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface IrrigationScheduleProps {
   schedule: any[];
   title?: string;
 }
 
-export const IrrigationSchedule = ({ schedule, title = "Irrigation Schedule" }: IrrigationScheduleProps) => {
+export const IrrigationSchedule = ({ schedule, title }: IrrigationScheduleProps) => {
+  const { t } = useTranslation();
+  
   if (!schedule || schedule.length === 0) {
     return null;
   }
@@ -31,7 +34,7 @@ export const IrrigationSchedule = ({ schedule, title = "Irrigation Schedule" }: 
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Droplets className="h-5 w-5 text-blue-500" />
-          {title}
+          {title || t("irrigation.schedule")}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -80,25 +83,25 @@ export const IrrigationSchedule = ({ schedule, title = "Irrigation Schedule" }: 
           <div className="mt-4 p-4 rounded-lg bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/10">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Total Applications</p>
+                <p className="text-xs text-muted-foreground mb-1">{t("irrigation.totalApplications")}</p>
                 <p className="text-2xl font-bold text-primary">{schedule.length}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Avg. per Application</p>
+                <p className="text-xs text-muted-foreground mb-1">{t("irrigation.avgPerApplication")}</p>
                 <p className="text-2xl font-bold text-primary">
                   {(schedule.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0) / schedule.length).toFixed(1)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Weekly Total</p>
+                <p className="text-xs text-muted-foreground mb-1">{t("irrigation.weeklyTotal")}</p>
                 <p className="text-2xl font-bold text-primary">
                   {schedule.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0).toFixed(1)}mm
                 </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Frequency</p>
+                <p className="text-xs text-muted-foreground mb-1">{t("irrigation.frequency")}</p>
                 <p className="text-2xl font-bold text-primary">
-                  {schedule.length > 1 ? `${Math.floor(7 / schedule.length)}x/week` : 'Weekly'}
+                  {schedule.length > 1 ? `${Math.floor(7 / schedule.length)}x/${t("irrigation.week")}` : t("irrigation.weekly")}
                 </p>
               </div>
             </div>

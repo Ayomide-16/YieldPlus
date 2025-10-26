@@ -189,11 +189,18 @@
   "resources": {
     "title": "Agricultural Resources & Support",
     "subtitle": "Access learning materials, news, and connect with agricultural experts",
+    "tabs": {
+      "studyMaterials": "Study Materials",
+      "newsFeed": "News Feed",
+      "expertHelp": "Expert Help"
+    },
+    "uploadPDF": "Upload New Study Material",
+    "uploadPDFTitle": "Upload PDF Study Material",
+    "uploadPDFDescription": "Add a new educational resource for farmers",
     "learningMaterials": "Learning Materials",
     "news": "News & Updates",
     "experts": "Agricultural Experts",
     "consultation": "Request Consultation",
-    "uploadPDF": "Upload Study Material",
     "pdfTitle": "Resource Title",
     "pdfDescription": "Description",
     "pdfCategory": "Category",
@@ -252,6 +259,7 @@
   },
   "irrigation": {
     "title": "Recommended Irrigation Schedule",
+    "schedule": "Irrigation Schedule",
     "day": "Day",
     "dayLabel": "Day {number}",
     "amount": "Amount",
@@ -259,6 +267,12 @@
     "notes": "Notes",
     "morning": "Morning",
     "evening": "Evening",
-    "noSchedule": "No irrigation schedule available"
+    "noSchedule": "No irrigation schedule available",
+    "totalApplications": "Total Applications",
+    "avgPerApplication": "Avg. per Application",
+    "weeklyTotal": "Weekly Total",
+    "frequency": "Frequency",
+    "week": "week",
+    "weekly": "Weekly"
   }
 }
