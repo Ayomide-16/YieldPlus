@@ -74,7 +74,7 @@ const ComprehensivePlan = () => {
 
   const handleCreateFarm = async () => {
     if (!farmName || !location.country || !farmSize) {
-      toast({ title: "Missing Information", description: "Please fill in required farm details", variant: "destructive" });
+      toast({ title: t("farmPlanner.missingInfo"), description: t("farmPlanner.fillDetails"), variant: "destructive" });
       return;
     }
 
@@ -94,24 +94,24 @@ const ComprehensivePlan = () => {
       .single();
 
     if (error) {
-      toast({ title: "Error", description: "Failed to create farm", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("farmPlanner.failedToCreate"), variant: "destructive" });
       return;
     }
 
     setFarms([data, ...farms]);
     setSelectedFarm(data.id);
     setShowNewFarm(false);
-    toast({ title: "Success", description: "Farm created successfully" });
+    toast({ title: t("common.success"), description: t("farmPlanner.farmCreated") });
   };
 
   const handleGeneratePlan = async () => {
     if (!selectedFarm) {
-      toast({ title: "No Farm Selected", description: "Please select or create a farm first", variant: "destructive" });
+      toast({ title: t("farmPlanner.noFarmSelected"), description: t("farmPlanner.selectOrCreate"), variant: "destructive" });
       return;
     }
 
     if (!plantingMonth) {
-      toast({ title: "Missing Information", description: "Please select planting month", variant: "destructive" });
+      toast({ title: t("farmPlanner.missingInfo"), description: t("farmPlanner.selectPlantingMonth"), variant: "destructive" });
       return;
     }
 
@@ -200,7 +200,7 @@ const ComprehensivePlan = () => {
       if (saveError) throw saveError;
 
       setPlan(parsedPlan);
-      toast({ title: "Success", description: "Comprehensive plan generated successfully!" });
+      toast({ title: t("common.success"), description: t("farmPlanner.planGenerated") });
     } catch (error: any) {
       console.error('Error generating plan:', error);
       let errorMessage = "Failed to generate plan";
@@ -208,7 +208,7 @@ const ComprehensivePlan = () => {
         errorMessage = error.message;
       }
       toast({ 
-        title: "Error", 
+        title: t("common.error"), 
         description: errorMessage, 
         variant: "destructive" 
       });
@@ -222,11 +222,11 @@ const ComprehensivePlan = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="max-w-md">
           <CardHeader>
-            <CardTitle>Authentication Required</CardTitle>
-            <CardDescription>Please sign in to access the comprehensive farm planner</CardDescription>
+            <CardTitle>{t("auth.required")}</CardTitle>
+            <CardDescription>{t("auth.authRequiredDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => navigate('/auth')}>Sign In</Button>
+            <Button onClick={() => navigate('/auth')}>{t("auth.signIn")}</Button>
           </CardContent>
         </Card>
       </div>
@@ -254,15 +254,15 @@ const ComprehensivePlan = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Select Farm</Label>
+                  <Label>{t("farmPlanner.selectFarmLabel")}</Label>
                   <Select value={selectedFarm} onValueChange={setSelectedFarm}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Choose a farm" />
+                      <SelectValue placeholder={t("farmPlanner.chooseAFarm")} />
                     </SelectTrigger>
                     <SelectContent>
                       {farms.map(farm => (
                         <SelectItem key={farm.id} value={farm.id}>
-                          {farm.farm_name} - {farm.total_size} hectares
+                          {farm.farm_name} - {farm.total_size} {t("farmPlanner.hectares")}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -279,7 +279,7 @@ const ComprehensivePlan = () => {
             <Card className="mb-8 shadow-[var(--shadow-elevated)]">
               <CardHeader>
                 <CardTitle>{t('farmPlanner.createNewFarm')}</CardTitle>
-                <CardDescription>Enter your farm details</CardDescription>
+                <CardDescription>{t("farmPlanner.enterDetails")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
@@ -297,12 +297,12 @@ const ComprehensivePlan = () => {
                   <div className="space-y-2">
                     <Label>{t('farmPlanner.soilType')}</Label>
                     <Select value={soilType} onValueChange={setSoilType}>
-                      <SelectTrigger><SelectValue placeholder="Select soil type" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={t("farmPlanner.selectSoilType")} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="clay">Clay</SelectItem>
-                        <SelectItem value="sandy">Sandy</SelectItem>
-                        <SelectItem value="loamy">Loamy</SelectItem>
-                        <SelectItem value="silt">Silt</SelectItem>
+                        <SelectItem value="clay">{t("farmPlanner.clay")}</SelectItem>
+                        <SelectItem value="sandy">{t("farmPlanner.sandy")}</SelectItem>
+                        <SelectItem value="loamy">{t("farmPlanner.loamy")}</SelectItem>
+                        <SelectItem value="silt">{t("farmPlanner.silt")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -312,24 +312,24 @@ const ComprehensivePlan = () => {
                   <div className="space-y-2">
                     <Label>{t('farmPlanner.waterSource')}</Label>
                     <Select value={waterSource} onValueChange={setWaterSource}>
-                      <SelectTrigger><SelectValue placeholder="Select water source" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={t("farmPlanner.selectWaterSource")} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="well">Well</SelectItem>
-                        <SelectItem value="river">River</SelectItem>
-                        <SelectItem value="rainwater">Rainwater</SelectItem>
-                        <SelectItem value="municipal">Municipal Supply</SelectItem>
+                        <SelectItem value="well">{t("farmPlanner.well")}</SelectItem>
+                        <SelectItem value="river">{t("farmPlanner.river")}</SelectItem>
+                        <SelectItem value="rainwater">{t("farmPlanner.rainwater")}</SelectItem>
+                        <SelectItem value="municipal">{t("farmPlanner.municipal")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
                     <Label>{t('farmPlanner.irrigationMethod')}</Label>
                     <Select value={irrigationMethod} onValueChange={setIrrigationMethod}>
-                      <SelectTrigger><SelectValue placeholder="Select method" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={t("farmPlanner.selectMethod")} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="drip">Drip</SelectItem>
-                        <SelectItem value="sprinkler">Sprinkler</SelectItem>
-                        <SelectItem value="flood">Flood</SelectItem>
-                        <SelectItem value="manual">Manual</SelectItem>
+                        <SelectItem value="drip">{t("farmPlanner.drip")}</SelectItem>
+                        <SelectItem value="sprinkler">{t("farmPlanner.sprinkler")}</SelectItem>
+                        <SelectItem value="flood">{t("farmPlanner.flood")}</SelectItem>
+                        <SelectItem value="manual">{t("farmPlanner.manual")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -342,9 +342,9 @@ const ComprehensivePlan = () => {
 
                 <div className="flex gap-2">
                   <Button onClick={handleCreateFarm}>
-                    <Save className="mr-2 h-4 w-4" /> Create Farm
+                    <Save className="mr-2 h-4 w-4" /> {t("farmPlanner.createFarm")}
                   </Button>
-                  <Button variant="outline" onClick={() => setShowNewFarm(false)}>Cancel</Button>
+                  <Button variant="outline" onClick={() => setShowNewFarm(false)}>{t("common.cancel")}</Button>
                 </div>
               </CardContent>
             </Card>
@@ -354,7 +354,7 @@ const ComprehensivePlan = () => {
             <Card className="mb-8 shadow-[var(--shadow-elevated)]">
               <CardHeader>
                 <CardTitle>{t('farmPlanner.configuration')}</CardTitle>
-                <CardDescription>Customize your comprehensive farm plan</CardDescription>
+                <CardDescription>{t("farmPlanner.customizePlan")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
@@ -363,7 +363,7 @@ const ComprehensivePlan = () => {
                     {t('farmPlanner.plantingMonth')} *
                   </Label>
                   <Select value={plantingMonth} onValueChange={setPlantingMonth}>
-                    <SelectTrigger><SelectValue placeholder="Select month" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t("farmPlanner.selectMonth")} /></SelectTrigger>
                     <SelectContent>
                       {months.map(month => (
                         <SelectItem key={month} value={month}>{month}</SelectItem>
@@ -433,7 +433,7 @@ const ComprehensivePlan = () => {
               <Card className="shadow-[var(--shadow-card)]">
                 <CardContent className="pt-6">
                   <Button onClick={() => window.print()} variant="outline" className="w-full">
-                    <Printer className="mr-2 h-4 w-4" />Print Comprehensive Farm Plan
+                    <Printer className="mr-2 h-4 w-4" />{t("farmPlanner.printPlan")}
                   </Button>
                 </CardContent>
               </Card>
@@ -444,14 +444,14 @@ const ComprehensivePlan = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <TrendingUp className="h-5 w-5 text-primary" />
-                      Executive Summary
+                      {t("farmPlanner.executiveSummary")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <p className="text-muted-foreground">{plan.executiveSummary.overview}</p>
                     {plan.executiveSummary.keyRecommendations && (
                       <div className="space-y-2">
-                        <h4 className="font-semibold">Key Recommendations:</h4>
+                        <h4 className="font-semibold">{t("farmPlanner.keyRecommendations")}</h4>
                         <ul className="list-disc list-inside space-y-1">
                           {plan.executiveSummary.keyRecommendations.map((rec: string, idx: number) => (
                             <li key={idx} className="text-sm text-muted-foreground">{rec}</li>
@@ -462,15 +462,15 @@ const ComprehensivePlan = () => {
                     {plan.executiveSummary.expectedOutcomes && (
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                         <div className="p-4 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5">
-                          <p className="text-sm text-muted-foreground mb-1">Expected Yield</p>
+                          <p className="text-sm text-muted-foreground mb-1">{t("farmPlanner.expectedYield")}</p>
                           <p className="text-xl font-bold text-primary">{plan.executiveSummary.expectedOutcomes.yield}</p>
                         </div>
                         <div className="p-4 rounded-lg bg-gradient-to-br from-secondary/30 to-secondary/10">
-                          <p className="text-sm text-muted-foreground mb-1">Revenue Projection</p>
+                          <p className="text-sm text-muted-foreground mb-1">{t("farmPlanner.revenueProjection")}</p>
                           <p className="text-xl font-bold">{plan.executiveSummary.expectedOutcomes.revenue}</p>
                         </div>
                         <div className="p-4 rounded-lg bg-gradient-to-br from-accent/50 to-accent/20">
-                          <p className="text-sm text-muted-foreground mb-1">ROI</p>
+                          <p className="text-sm text-muted-foreground mb-1">{t("farmPlanner.roi")}</p>
                           <p className="text-xl font-bold">{plan.executiveSummary.expectedOutcomes.roi}</p>
                         </div>
                       </div>
@@ -492,16 +492,16 @@ const ComprehensivePlan = () => {
                       <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
                         <h4 className="font-semibold mb-2 flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-primary" />
-                          Optimal Planting Window
+                          {t("farmPlanner.optimalPlantingWindow")}
                         </h4>
                         <div className="flex items-center gap-4">
                           <div>
-                            <p className="text-xs text-muted-foreground">Start Date</p>
+                            <p className="text-xs text-muted-foreground">{t("farmPlanner.startDate")}</p>
                             <p className="font-bold text-primary">{plan.climaticAnalysis.optimalPlantingWindow.start}</p>
                           </div>
                           <div className="h-8 w-px bg-border" />
                           <div>
-                            <p className="text-xs text-muted-foreground">End Date</p>
+                            <p className="text-xs text-muted-foreground">{t("farmPlanner.endDate")}</p>
                             <p className="font-bold text-primary">{plan.climaticAnalysis.optimalPlantingWindow.end}</p>
                           </div>
                         </div>
@@ -536,7 +536,7 @@ const ComprehensivePlan = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Sprout className="h-5 w-5 text-primary" />
-                      Crop Management
+                      {t("farmPlanner.cropManagement")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
@@ -555,19 +555,19 @@ const ComprehensivePlan = () => {
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                               <div>
-                                <p className="text-muted-foreground text-xs">Planting</p>
+                                <p className="text-muted-foreground text-xs">{t("farmPlanner.planting")}</p>
                                 <p className="font-medium">{crop.plantingDate}</p>
                               </div>
                               <div>
-                                <p className="text-muted-foreground text-xs">Harvest</p>
+                                <p className="text-muted-foreground text-xs">{t("farmPlanner.harvest")}</p>
                                 <p className="font-medium">{crop.harvestDate}</p>
                               </div>
                               <div>
-                                <p className="text-muted-foreground text-xs">Spacing</p>
+                                <p className="text-muted-foreground text-xs">{t("farmPlanner.spacing")}</p>
                                 <p className="font-medium">{crop.spacing}</p>
                               </div>
                               <div>
-                                <p className="text-muted-foreground text-xs">Market Value</p>
+                                <p className="text-muted-foreground text-xs">{t("farmPlanner.marketValue")}</p>
                                 <p className="font-medium text-primary">{crop.marketValue}</p>
                               </div>
                             </div>

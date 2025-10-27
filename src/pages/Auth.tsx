@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Sprout } from "lucide-react";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 
 const authSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -19,6 +20,7 @@ const authSchema = z.object({
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -61,13 +63,13 @@ const Auth = () => {
       if (error) throw error;
 
       toast({
-        title: "Success!",
-        description: "Your account has been created. You can now log in.",
+        title: t("auth.successTitle"),
+        description: t("auth.successDescription"),
       });
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to sign up",
+        title: t("auth.errorTitle"),
+        description: error.message || t("auth.failedSignUp"),
         variant: "destructive",
       });
     } finally {
@@ -90,13 +92,13 @@ const Auth = () => {
       if (error) throw error;
 
       toast({
-        title: "Welcome back!",
-        description: "You have successfully logged in.",
+        title: t("auth.welcomeBackTitle"),
+        description: t("auth.welcomeBackDescription"),
       });
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to sign in",
+        title: t("auth.errorTitle"),
+        description: error.message || t("auth.failedSignIn"),
         variant: "destructive",
       });
     } finally {
@@ -111,81 +113,81 @@ const Auth = () => {
           <div className="flex justify-center mb-4">
             <Sprout className="h-12 w-12 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Welcome to Ceres.ai</CardTitle>
-          <CardDescription>Your AI-powered farming assistant</CardDescription>
+          <CardTitle className="text-2xl">{t("auth.welcomeTitle")}</CardTitle>
+          <CardDescription>{t("auth.welcomeSubtitle")}</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsTrigger value="signin">{t("auth.signIn")}</TabsTrigger>
+              <TabsTrigger value="signup">{t("auth.signUp")}</TabsTrigger>
             </TabsList>
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
+                  <Label htmlFor="signin-email">{t("auth.email")}</Label>
                   <Input
                     id="signin-email"
                     type="email"
-                    placeholder="your@email.com"
+                    placeholder={t("auth.emailPlaceholder")}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signin-password">Password</Label>
+                  <Label htmlFor="signin-password">{t("auth.password")}</Label>
                   <Input
                     id="signin-password"
                     type="password"
-                    placeholder="••••••"
+                    placeholder={t("auth.passwordPlaceholder")}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Signing in..." : "Sign In"}
+                  {loading ? t("auth.signingIn") : t("auth.signIn")}
                 </Button>
               </form>
             </TabsContent>
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-name">Full Name</Label>
+                  <Label htmlFor="signup-name">{t("auth.fullName")}</Label>
                   <Input
                     id="signup-name"
                     type="text"
-                    placeholder="John Doe"
+                    placeholder={t("auth.namePlaceholder")}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-email">{t("auth.email")}</Label>
                   <Input
                     id="signup-email"
                     type="email"
-                    placeholder="your@email.com"
+                    placeholder={t("auth.emailPlaceholder")}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
+                  <Label htmlFor="signup-password">{t("auth.password")}</Label>
                   <Input
                     id="signup-password"
                     type="password"
-                    placeholder="••••••"
+                    placeholder={t("auth.passwordPlaceholder")}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Creating account..." : "Sign Up"}
+                  {loading ? t("auth.creatingAccount") : t("auth.signUp")}
                 </Button>
               </form>
             </TabsContent>

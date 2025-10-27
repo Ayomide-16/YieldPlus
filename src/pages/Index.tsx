@@ -21,8 +21,8 @@ const Index = () => {
   }, []);
   
   const mainTool = {
-    title: "Comprehensive Farm Planner",
-    description: "All-in-one farm planning with real-time climate data, soil analysis, water management, market insights, and pest management",
+    title: t("home.comprehensivePlannerTitle"),
+    description: t("home.comprehensivePlannerDesc"),
     icon: Tractor,
     path: "/comprehensive-plan",
     gradient: "from-primary/20 to-primary/10"
@@ -70,8 +70,8 @@ const Index = () => {
       iconColor: "text-red-600"
     },
     {
-      title: "Resources & Expert Help",
-      description: "Access study materials, agricultural news, and connect with farming experts",
+      title: t("home.resourcesTitle"),
+      description: t("home.resourcesDesc"),
       icon: BookOpen,
       path: "/resources",
       gradient: "from-indigo-500/20 to-violet-500/20",
@@ -139,7 +139,7 @@ const Index = () => {
             <Button asChild size="lg" className="shadow-lg">
               <Link to={mainTool.path}>
                 <Tractor className="mr-2 h-5 w-5" />
-                Create Your Farm Plan
+                {t("home.createPlan")}
               </Link>
             </Button>
           </CardContent>
@@ -149,9 +149,9 @@ const Index = () => {
       {/* Tools Grid */}
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-3">Specialized Tools</h2>
+          <h2 className="text-3xl font-bold mb-3">{t("home.specializedTools")}</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Individual tools for specific farming needs
+            {t("home.specializedToolsDesc")}
           </p>
         </div>
 
@@ -171,7 +171,7 @@ const Index = () => {
               </CardHeader>
               <CardContent>
                 <Button asChild variant="outline" size="sm" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                  <Link to={tool.path}>Launch Tool</Link>
+                  <Link to={tool.path}>{t("home.launchTool")}</Link>
                 </Button>
               </CardContent>
             </Card>
