@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -83,9 +83,11 @@ export function FarmAssetTokenization() {
     }
   };
 
-  useState(() => {
-    loadAssets();
-  });
+  useEffect(() => {
+    if (user) {
+      loadAssets();
+    }
+  }, [user]);
 
   return (
     <div className="space-y-6">

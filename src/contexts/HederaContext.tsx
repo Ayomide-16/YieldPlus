@@ -36,11 +36,14 @@ export const HederaProvider = ({ children }: { children: ReactNode }) => {
         .select('*')
         .eq('user_id', user?.id)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       if (data && !error) {
         setAccountId(data.hedera_account_id);
         setIsConnected(true);
+      } else {
+        setAccountId(null);
+        setIsConnected(false);
       }
     } catch (error) {
       console.error('Error loading wallet:', error);
