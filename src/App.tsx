@@ -19,17 +19,20 @@ import MyPlans from "./pages/MyPlans";
 import MyFarms from "./pages/MyFarms";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import BlockchainHub from "./pages/BlockchainHub";
 import { FarmDataProvider } from "./contexts/FarmDataContext";
+import { HederaProvider } from "./contexts/HederaContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <FarmDataProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+      <HederaProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <SidebarProvider>
             <div className="min-h-screen flex w-full bg-background">
               <AppSidebar />
@@ -49,6 +52,7 @@ const App = () => (
                     <Route path="/resources" element={<Resources />} />
                     <Route path="/my-plans" element={<MyPlans />} />
                     <Route path="/my-farms" element={<MyFarms />} />
+                    <Route path="/blockchain" element={<BlockchainHub />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
@@ -58,6 +62,7 @@ const App = () => (
           </SidebarProvider>
         </BrowserRouter>
       </TooltipProvider>
+      </HederaProvider>
     </FarmDataProvider>
   </QueryClientProvider>
 );
