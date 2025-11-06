@@ -158,7 +158,29 @@ const Resources = () => {
       .select('*')
       .order('created_at', { ascending: false });
     
-    setPdfs(data || []);
+    if (data) {
+      // Generate signed URLs for each resource
+      const resourcesWithUrls = await Promise.all(
+        data.map(async (resource) => {
+          // Check if file_url is already a full URL (legacy data)
+          if (resource.file_url.startsWith('http')) {
+            return resource;
+          }
+          
+          // Generate signed URL for file path (expires in 1 hour)
+          const { data: signedData } = await supabase.storage
+            .from('study-materials')
+            .createSignedUrl(resource.file_url, 3600);
+          
+          return {
+            ...resource,
+            file_url: signedData?.signedUrl || resource.file_url
+          };
+        })
+      );
+      setPdfs(resourcesWithUrls);
+    }
+    
     setLoading(false);
   };
 
@@ -245,12 +267,8 @@ const Resources = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('study-materials')
-        .getPublicUrl(filePath);
-
-      // Save metadata to database
+      // Save metadata to database with file path (not public URL)
+      // Signed URLs will be generated when displaying
       const { error: dbError } = await supabase
         .from('agricultural_resources')
         .insert({
@@ -258,7 +276,7 @@ const Resources = () => {
           title: pdfTitle,
           description: pdfDescription,
           category: pdfCategory,
-          file_url: publicUrl,
+          file_url: filePath, // Store path, not URL
           file_type: pdfFile.type,
           file_size: pdfFile.size
         });
@@ -289,11 +307,16 @@ const Resources = () => {
 
   const handleDeletePDF = async (id: string, fileUrl: string) => {
     try {
-      // Delete from storage
-      const filePath = fileUrl.split('/').pop();
-      if (filePath) {
-        await supabase.storage.from('study-materials').remove([filePath]);
+      // Extract file path from URL or use as-is if it's already a path
+      let filePath = fileUrl;
+      if (fileUrl.startsWith('http')) {
+        // Legacy data: extract path from public URL
+        const urlParts = fileUrl.split('/study-materials/');
+        filePath = urlParts[1] || fileUrl;
       }
+
+      // Delete from storage
+      await supabase.storage.from('study-materials').remove([filePath]);
 
       // Delete from database
       const { error } = await supabase
