@@ -1,11 +1,19 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const inputSchema = z.object({
+  location: z.object({
+    country: z.string().min(1).max(100),
+    state: z.string().max(100).optional(),
+  }),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -13,7 +21,8 @@ serve(async (req) => {
   }
 
   try {
-    const { location } = await req.json();
+    const requestBody = await req.json();
+    const { location } = inputSchema.parse(requestBody);
     console.log('Fetching news for location:', location);
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');

@@ -1,9 +1,22 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const inputSchema = z.object({
+  cropType: z.string().min(1).max(100),
+  expectedYield: z.number().positive().max(1000000),
+  yieldUnit: z.string().max(50),
+  farmSize: z.number().positive().max(100000),
+  location: z.object({
+    country: z.string().max(100),
+    state: z.string().max(100).optional(),
+  }),
+  harvestDate: z.string().max(50),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -11,7 +24,8 @@ serve(async (req) => {
   }
 
   try {
-    const { cropType, expectedYield, yieldUnit, farmSize, location, harvestDate } = await req.json();
+    const requestBody = await req.json();
+    const { cropType, expectedYield, yieldUnit, farmSize, location, harvestDate } = inputSchema.parse(requestBody);
     console.log('Estimating market prices for:', { cropType, expectedYield, yieldUnit, farmSize, location, harvestDate });
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -38,7 +52,7 @@ serve(async (req) => {
     
     Crop Type: ${cropType}
     ${expectedYield ? `Expected Yield: ${expectedYield} ${yieldUnit}` : `Farm Size: ${farmSize} hectares (auto-predict yield based on average productivity)`}
-    Location: ${location.country}, ${location.state}, ${location.localGovernment}
+    Location: ${location.country}, ${location.state || ''}
     Expected Harvest Date: ${harvestDate}
     Currency: ${currency}
     

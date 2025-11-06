@@ -1,9 +1,28 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const inputSchema = z.object({
+  farmData: z.object({
+    farm_name: z.string().max(200).optional(),
+    location: z.any(),
+    total_size: z.number().positive().max(100000).optional(),
+    farmSize: z.number().positive().max(100000).optional(),
+    soil_type: z.string().max(100).optional(),
+    soilType: z.string().max(100).optional(),
+    cropType: z.string().max(100).optional(),
+    water_source: z.string().max(100).optional(),
+    irrigation_method: z.string().max(100).optional(),
+    crops: z.array(z.string().max(100)).optional(),
+  }),
+  preferredPlantingDate: z.string().max(50).optional(),
+  climateData: z.any().optional(),
+  includeSections: z.array(z.string()).max(20).optional(),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -11,12 +30,13 @@ serve(async (req) => {
   }
 
   try {
+    const requestBody = await req.json();
     const { 
       farmData, 
       preferredPlantingDate, 
       climateData,
       includeSections 
-    } = await req.json();
+    } = inputSchema.parse(requestBody);
     
     console.log('Generating comprehensive farm plan for:', farmData.farm_name);
 
