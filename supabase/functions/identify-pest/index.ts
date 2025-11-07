@@ -1,19 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-const inputSchema = z.object({
-  cropType: z.string().min(1).max(100),
-  symptoms: z.array(z.string().max(200)).min(1).max(20),
-  location: z.object({
-    country: z.string().max(100),
-    state: z.string().max(100).optional(),
-  }),
-});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -21,8 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const requestBody = await req.json();
-    const { cropType, symptoms, location } = inputSchema.parse(requestBody);
+    const { cropType, symptoms, location } = await req.json();
     console.log('Identifying pest/disease for:', { cropType, symptoms, location });
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
