@@ -1,21 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-const inputSchema = z.object({
-  cropType: z.string().min(1).max(100),
-  farmSize: z.number().positive().max(100000),
-  plantingMonth: z.string().max(50),
-  location: z.object({
-    country: z.string().max(100),
-    state: z.string().max(100).optional(),
-  }),
-  soilData: z.any().optional(),
-});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -23,8 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const requestBody = await req.json();
-    const { cropType, farmSize, plantingMonth, location, soilData } = inputSchema.parse(requestBody);
+    const { cropType, farmSize, plantingMonth, location, soilData } = await req.json();
     console.log('Analyzing fertilizer needs for:', { cropType, farmSize, plantingMonth, location, soilData });
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');

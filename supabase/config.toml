@@ -1,1 +1,28 @@
 project_id = "ptrkvdkxbwwzszwuweja"
+
+[functions.analyze-crop]
+verify_jwt = false
+
+[functions.analyze-soil]
+verify_jwt = false
+
+[functions.analyze-water]
+verify_jwt = false
+
+[functions.estimate-market-price]
+verify_jwt = false
+
+[functions.get-climate-data]
+verify_jwt = false
+
+[functions.analyze-fertilizer]
+verify_jwt = false
+
+[functions.identify-pest]
+verify_jwt = false
+
+[functions.generate-comprehensive-plan]
+verify_jwt = false
+
+[functions.fetch-agriculture-news]
+verify_jwt = false

@@ -1,19 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-const inputSchema = z.object({
-  color: z.string().min(1).max(100),
-  texture: z.string().min(1).max(100),
-  notes: z.string().max(1000).optional(),
-  imageBase64: z.string().max(10000000).optional(),
-  soilPH: z.string().max(50),
-  soilCompactness: z.string().min(1).max(100),
-});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -21,8 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const requestBody = await req.json();
-    const { color, texture, notes, imageBase64, soilPH, soilCompactness } = inputSchema.parse(requestBody);
+    const { color, texture, notes, imageBase64, soilPH, soilCompactness } = await req.json();
     console.log('Analyzing soil conditions with pH and compactness data');
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');

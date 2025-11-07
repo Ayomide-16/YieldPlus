@@ -1,17 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-const inputSchema = z.object({
-  latitude: z.number().min(-90).max(90),
-  longitude: z.number().min(-180).max(180),
-  startDate: z.string().max(50).optional(),
-  endDate: z.string().max(50).optional(),
-});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -19,8 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const requestBody = await req.json();
-    const { latitude, longitude, startDate, endDate } = inputSchema.parse(requestBody);
+    const { latitude, longitude, startDate, endDate } = await req.json();
     console.log('Fetching climate data for:', { latitude, longitude, startDate, endDate });
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');

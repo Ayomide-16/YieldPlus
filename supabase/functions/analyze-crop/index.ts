@@ -1,21 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-const inputSchema = z.object({
-  location: z.object({
-    country: z.string().min(1).max(100),
-    state: z.string().max(100).optional(),
-    city: z.string().max(100).optional(),
-  }),
-  soilType: z.string().min(1).max(100),
-  cropType: z.string().min(1).max(100),
-  farmSize: z.number().positive().max(100000),
-});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -23,8 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const requestBody = await req.json();
-    const { location, soilType, cropType, farmSize } = inputSchema.parse(requestBody);
+    const { location, soilType, cropType, farmSize } = await req.json();
     console.log('Analyzing crop conditions for:', { location, soilType, cropType, farmSize });
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -76,12 +63,12 @@ serve(async (req) => {
 
     const userPrompt = `Analyze the following farm conditions and provide detailed crop planning recommendations with climate research for the specific location:
     
-    Location: ${location.country}, ${location.state || ''}, ${location.city || ''}
+    Location: ${location.country}, ${location.state}, ${location.localGovernment}
     Soil Type: ${soilType}
     Desired Crop: ${cropType}
     Farm Size: ${farmSize} hectares
     
-    First, research the climate conditions for this specific location (${location.city || location.state}, ${location.state}, ${location.country}).
+    First, research the climate conditions for this specific location (${location.localGovernment}, ${location.state}, ${location.country}).
     
     IMPORTANT: First check if "${cropType}" is a valid agricultural crop. If it's not valid or doesn't exist, return a JSON with an "error" field explaining this.
     
