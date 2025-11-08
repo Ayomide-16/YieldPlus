@@ -1,28 +1,28 @@
 project_id = "ptrkvdkxbwwzszwuweja"
 
 [functions.analyze-crop]
-verify_jwt = false
+verify_jwt = true
 
 [functions.analyze-soil]
-verify_jwt = false
+verify_jwt = true
 
 [functions.analyze-water]
-verify_jwt = false
+verify_jwt = true
 
 [functions.estimate-market-price]
-verify_jwt = false
+verify_jwt = true
 
 [functions.get-climate-data]
-verify_jwt = false
+verify_jwt = true
 
 [functions.analyze-fertilizer]
-verify_jwt = false
+verify_jwt = true
 
 [functions.identify-pest]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-comprehensive-plan]
-verify_jwt = false
+verify_jwt = true
 
 [functions.fetch-agriculture-news]
-verify_jwt = false
+verify_jwt = true

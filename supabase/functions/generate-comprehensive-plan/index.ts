@@ -1,9 +1,30 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const ComprehensivePlanSchema = z.object({
+  farmData: z.object({
+    farm_name: z.string().min(1).max(100),
+    location: z.object({
+      country: z.string().min(1).max(100),
+      state: z.string().max(100).optional(),
+      localGovernment: z.string().max(100).optional()
+    }),
+    total_size: z.number().min(0.1).max(10000),
+    soil_type: z.string().min(1).max(50),
+    water_source: z.string().min(1).max(100),
+    irrigation_method: z.string().min(1).max(100),
+    crops: z.array(z.string().min(1).max(50)).optional()
+  }),
+  preferredPlantingDate: z.string(),
+  climateData: z.any().optional(),
+  includeSections: z.record(z.boolean()).optional()
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -11,14 +32,35 @@ serve(async (req) => {
   }
 
   try {
-    const { 
-      farmData, 
-      preferredPlantingDate, 
-      climateData,
-      includeSections 
-    } = await req.json();
+    // Authentication check
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Input validation
+    const body = await req.json();
+    const validatedData = ComprehensivePlanSchema.parse(body);
+    const { farmData, preferredPlantingDate, climateData, includeSections } = validatedData;
     
-    console.log('Generating comprehensive farm plan for:', farmData.farm_name);
+    console.log('Generating comprehensive farm plan for:', farmData.farm_name, 'userId:', user.id);
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -262,6 +304,12 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return new Response(
+        JSON.stringify({ error: 'Validation failed', details: error.errors }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     console.error('Error in generate-comprehensive-plan function:', error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
       status: 500,
