@@ -301,6 +301,7 @@ export type Database = {
         Row: {
           created_at: string | null
           description: string
+          expert_id: string | null
           expert_response: Json | null
           farm_id: string | null
           id: string
@@ -314,6 +315,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           description: string
+          expert_id?: string | null
           expert_response?: Json | null
           farm_id?: string | null
           id?: string
@@ -327,6 +329,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           description?: string
+          expert_id?: string | null
           expert_response?: Json | null
           farm_id?: string | null
           id?: string
@@ -338,6 +341,20 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "expert_consultations_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "agricultural_experts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expert_consultations_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts_public_info"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "expert_consultations_farm_id_fkey"
             columns: ["farm_id"]
@@ -803,14 +820,54 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      experts_public_info: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          location: string | null
+          name: string | null
+          specialization: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          location?: string | null
+          name?: string | null
+          specialization?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          location?: string | null
+          name?: string | null
+          specialization?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      get_expert_contact_info: {
+        Args: { _expert_id: string }
+        Returns: {
+          created_at: string
+          email: string
+          id: string
+          location: string
+          name: string
+          phone: string
+          specialization: string
+          whatsapp_link: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      user_has_consultation_with_expert: {
+        Args: { _expert_id: string; _user_id: string }
         Returns: boolean
       }
     }
