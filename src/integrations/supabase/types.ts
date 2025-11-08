@@ -119,6 +119,68 @@ export type Database = {
         }
         Relationships: []
       }
+      agricultural_nfts: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          expiry_date: string | null
+          farm_id: string | null
+          hedera_serial_number: number | null
+          hedera_token_id: string | null
+          id: string
+          image_url: string | null
+          issued_date: string | null
+          issuer: string | null
+          metadata: Json | null
+          nft_type: string
+          status: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          expiry_date?: string | null
+          farm_id?: string | null
+          hedera_serial_number?: number | null
+          hedera_token_id?: string | null
+          id?: string
+          image_url?: string | null
+          issued_date?: string | null
+          issuer?: string | null
+          metadata?: Json | null
+          nft_type: string
+          status?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          expiry_date?: string | null
+          farm_id?: string | null
+          hedera_serial_number?: number | null
+          hedera_token_id?: string | null
+          id?: string
+          image_url?: string | null
+          issued_date?: string | null
+          issuer?: string | null
+          metadata?: Json | null
+          nft_type?: string
+          status?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agricultural_nfts_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agricultural_resources: {
         Row: {
           category: string
@@ -285,6 +347,59 @@ export type Database = {
           },
         ]
       }
+      farm_data_registry: {
+        Row: {
+          created_at: string | null
+          data_hash: string
+          data_summary: Json | null
+          farm_id: string | null
+          hedera_file_id: string | null
+          hedera_transaction_id: string | null
+          id: string
+          record_type: string
+          updated_at: string | null
+          user_id: string
+          verification_status: string | null
+          visibility: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_hash: string
+          data_summary?: Json | null
+          farm_id?: string | null
+          hedera_file_id?: string | null
+          hedera_transaction_id?: string | null
+          id?: string
+          record_type: string
+          updated_at?: string | null
+          user_id: string
+          verification_status?: string | null
+          visibility?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_hash?: string
+          data_summary?: Json | null
+          farm_id?: string | null
+          hedera_file_id?: string | null
+          hedera_transaction_id?: string | null
+          id?: string
+          record_type?: string
+          updated_at?: string | null
+          user_id?: string
+          verification_status?: string | null
+          visibility?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_data_registry_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       farms: {
         Row: {
           created_at: string | null
@@ -326,6 +441,65 @@ export type Database = {
           water_source?: string | null
         }
         Relationships: []
+      }
+      payment_contracts: {
+        Row: {
+          amount: number
+          contract_type: string
+          created_at: string | null
+          currency: string | null
+          execution_date: string | null
+          farm_id: string | null
+          hedera_contract_id: string | null
+          id: string
+          parties: Json
+          status: string | null
+          terms: Json
+          trigger_conditions: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          contract_type: string
+          created_at?: string | null
+          currency?: string | null
+          execution_date?: string | null
+          farm_id?: string | null
+          hedera_contract_id?: string | null
+          id?: string
+          parties: Json
+          status?: string | null
+          terms: Json
+          trigger_conditions?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          contract_type?: string
+          created_at?: string | null
+          currency?: string | null
+          execution_date?: string | null
+          farm_id?: string | null
+          hedera_contract_id?: string | null
+          id?: string
+          parties?: Json
+          status?: string | null
+          terms?: Json
+          trigger_conditions?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_contracts_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pest_disease_reports: {
         Row: {
@@ -409,55 +583,34 @@ export type Database = {
       }
       saved_plans: {
         Row: {
-          analysis_result: Json | null
           created_at: string | null
-          crop_type: string | null
-          expected_yield: number | null
-          farm_size: number | null
-          harvest_date: string | null
           id: string
-          irrigation_method: string | null
-          location: string | null
+          location: Json | null
+          plan_data: Json
           plan_name: string
           plan_type: string
-          soil_type: string | null
           updated_at: string | null
           user_id: string
-          water_source: string | null
         }
         Insert: {
-          analysis_result?: Json | null
           created_at?: string | null
-          crop_type?: string | null
-          expected_yield?: number | null
-          farm_size?: number | null
-          harvest_date?: string | null
           id?: string
-          irrigation_method?: string | null
-          location?: string | null
+          location?: Json | null
+          plan_data: Json
           plan_name: string
           plan_type: string
-          soil_type?: string | null
           updated_at?: string | null
           user_id: string
-          water_source?: string | null
         }
         Update: {
-          analysis_result?: Json | null
           created_at?: string | null
-          crop_type?: string | null
-          expected_yield?: number | null
-          farm_size?: number | null
-          harvest_date?: string | null
           id?: string
-          irrigation_method?: string | null
-          location?: string | null
+          location?: Json | null
+          plan_data?: Json
           plan_name?: string
           plan_type?: string
-          soil_type?: string | null
           updated_at?: string | null
           user_id?: string
-          water_source?: string | null
         }
         Relationships: [
           {
@@ -465,6 +618,128 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supply_chain_records: {
+        Row: {
+          batch_id: string
+          created_at: string | null
+          crop_type: string
+          current_stage: string
+          farm_id: string | null
+          hedera_topic_id: string | null
+          hedera_transaction_id: string | null
+          id: string
+          location: Json | null
+          metadata: Json | null
+          previous_record_id: string | null
+          timestamp: string | null
+          user_id: string
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string | null
+          crop_type: string
+          current_stage: string
+          farm_id?: string | null
+          hedera_topic_id?: string | null
+          hedera_transaction_id?: string | null
+          id?: string
+          location?: Json | null
+          metadata?: Json | null
+          previous_record_id?: string | null
+          timestamp?: string | null
+          user_id: string
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string | null
+          crop_type?: string
+          current_stage?: string
+          farm_id?: string | null
+          hedera_topic_id?: string | null
+          hedera_transaction_id?: string | null
+          id?: string
+          location?: Json | null
+          metadata?: Json | null
+          previous_record_id?: string | null
+          timestamp?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supply_chain_records_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supply_chain_records_previous_record_id_fkey"
+            columns: ["previous_record_id"]
+            isOneToOne: false
+            referencedRelation: "supply_chain_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tokenized_farm_assets: {
+        Row: {
+          asset_name: string
+          asset_type: string
+          available_supply: number
+          created_at: string | null
+          description: string | null
+          farm_id: string | null
+          id: string
+          metadata: Json | null
+          status: string | null
+          token_id: string | null
+          total_supply: number
+          total_value: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          asset_name: string
+          asset_type: string
+          available_supply: number
+          created_at?: string | null
+          description?: string | null
+          farm_id?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: string | null
+          token_id?: string | null
+          total_supply: number
+          total_value: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          asset_name?: string
+          asset_type?: string
+          available_supply?: number
+          created_at?: string | null
+          description?: string | null
+          farm_id?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: string | null
+          token_id?: string | null
+          total_supply?: number
+          total_value?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tokenized_farm_assets_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
             referencedColumns: ["id"]
           },
         ]
@@ -487,6 +762,42 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_wallets: {
+        Row: {
+          connected_at: string | null
+          created_at: string | null
+          hedera_account_id: string | null
+          id: string
+          is_active: boolean | null
+          last_used_at: string | null
+          public_key: string | null
+          user_id: string
+          wallet_type: string | null
+        }
+        Insert: {
+          connected_at?: string | null
+          created_at?: string | null
+          hedera_account_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          public_key?: string | null
+          user_id: string
+          wallet_type?: string | null
+        }
+        Update: {
+          connected_at?: string | null
+          created_at?: string | null
+          hedera_account_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          public_key?: string | null
+          user_id?: string
+          wallet_type?: string | null
         }
         Relationships: []
       }
