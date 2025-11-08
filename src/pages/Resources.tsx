@@ -208,12 +208,15 @@ const Resources = () => {
   };
 
   const loadExperts = async () => {
-    const { data } = await supabase
-      .from('agricultural_experts')
-      .select('*')
-      .order('location', { ascending: true });
+    // Use the secure RPC function that only returns basic info (no contact details)
+    const { data, error } = await supabase.rpc('list_agricultural_experts');
     
-    setExperts(data || []);
+    if (error) {
+      console.error('Error loading experts:', error);
+      setExperts([]);
+    } else {
+      setExperts(data || []);
+    }
   };
 
   const loadNews = async () => {
@@ -774,25 +777,9 @@ const Resources = () => {
                                 </Button>
                               )}
                             </div>
-                            <div className="space-y-2 mt-3">
-                              <a href={`tel:${expert.phone}`}>
-                                <Button variant="outline" size="sm" className="w-full justify-start">
-                                  <Phone className="mr-2 h-3 w-3" />{expert.phone}
-                                </Button>
-                              </a>
-                              <a href={`mailto:${expert.email}`}>
-                                <Button variant="outline" size="sm" className="w-full justify-start">
-                                  <Mail className="mr-2 h-3 w-3" />{expert.email}
-                                </Button>
-                              </a>
-                              {expert.whatsapp_link && (
-                                <a href={expert.whatsapp_link} target="_blank" rel="noopener noreferrer">
-                                  <Button variant="outline" size="sm" className="w-full justify-start bg-green-50 hover:bg-green-100 text-green-700">
-                                    <MessageCircle className="mr-2 h-3 w-3" />WhatsApp
-                                  </Button>
-                                </a>
-                              )}
-                            </div>
+                            <p className="text-xs text-muted-foreground mt-3 p-2 bg-primary/5 rounded">
+                              <strong>Note:</strong> Contact details are available after your consultation request is accepted by the expert.
+                            </p>
                           </div>
                         </div>
                       </div>

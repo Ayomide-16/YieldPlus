@@ -836,6 +836,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      list_agricultural_experts: {
+        Args: never
+        Returns: {
+          created_at: string
+          id: string
+          location: string
+          name: string
+          specialization: string
+          updated_at: string
+        }[]
+      }
       user_has_consultation_with_expert: {
         Args: { _expert_id: string; _user_id: string }
         Returns: boolean
