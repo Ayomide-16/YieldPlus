@@ -96,7 +96,9 @@ const PestIdentifier = () => {
         cleanedAnalysis = cleanedAnalysis.replace(/```json\n?/g, '').replace(/```\n?/g, '');
         parsedAnalysis = JSON.parse(cleanedAnalysis);
       } catch (parseError) {
-        console.error('JSON Parse Error:', parseError, 'Raw data:', data.analysis);
+        if (import.meta.env.DEV) {
+          console.error('JSON Parse Error:', parseError, 'Raw data:', data.analysis);
+        }
         toast({
           title: "Error",
           description: "Failed to parse analysis. Please try again.",

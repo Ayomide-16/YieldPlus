@@ -78,7 +78,9 @@ const FertilizerPlanner = () => {
         description: "Fertilizer plan generated successfully"
       });
     } catch (error: any) {
-      console.error('Fertilizer analysis error:', error);
+      if (import.meta.env.DEV) {
+        console.error('Fertilizer analysis error:', error);
+      }
       toast({
         title: "Error",
         description: error.message || "Failed to generate fertilizer plan",

@@ -157,7 +157,9 @@ const ComprehensivePlan = () => {
       const derivedPlantingDate = new Date(currentYear, monthIndex, 15).toISOString().split('T')[0];
       
       // Step 1: Get climate data
-      console.log('Fetching climate data...');
+      if (import.meta.env.DEV) {
+        console.log('Fetching climate data...');
+      }
       const { data: climateResponse, error: climateError } = await supabase.functions.invoke('get-climate-data', {
         body: {
           latitude: 6.5244, // Default for Nigeria, should be derived from location
@@ -178,13 +180,17 @@ const ComprehensivePlan = () => {
           parsedClimate = climateResponse.climateData;
         }
       } catch (e) {
-        console.error('Error parsing climate data:', e);
+        if (import.meta.env.DEV) {
+          console.error('Error parsing climate data:', e);
+        }
         parsedClimate = { currentConditions: {}, forecast: {} };
       }
       setClimateData(parsedClimate);
 
       // Step 2: Generate comprehensive plan
-      console.log('Generating comprehensive plan...');
+      if (import.meta.env.DEV) {
+        console.log('Generating comprehensive plan...');
+      }
       const { data: planResponse, error: planError } = await supabase.functions.invoke('generate-comprehensive-plan', {
         body: {
           farmData: farm,
@@ -205,7 +211,9 @@ const ComprehensivePlan = () => {
           parsedPlan = planResponse.plan;
         }
       } catch (e) {
-        console.error('Error parsing plan:', e);
+        if (import.meta.env.DEV) {
+          console.error('Error parsing plan:', e);
+        }
         // If JSON parsing fails, create a basic structure with the raw response
         parsedPlan = { 
           executiveSummary: { 
@@ -232,7 +240,9 @@ const ComprehensivePlan = () => {
       setPlan(parsedPlan);
       toast({ title: t("common.success"), description: t("farmPlanner.planGenerated") });
     } catch (error: any) {
-      console.error('Error generating plan:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error generating plan:', error);
+      }
       let errorMessage = "Failed to generate plan";
       if (error.message) {
         errorMessage = error.message;

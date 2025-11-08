@@ -94,7 +94,9 @@ const SoilNutrientAdvisor = () => {
         description: "Your soil analysis is ready",
       });
     } catch (error: any) {
-      console.error('Error analyzing soil:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error analyzing soil:', error);
+      }
       toast({
         title: "Analysis Failed",
         description: error.message || "Failed to analyze soil. Please try again.",

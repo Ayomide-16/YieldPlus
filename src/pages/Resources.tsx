@@ -420,9 +420,17 @@ const Resources = () => {
       setShowExpertDialog(false);
       loadExperts();
     } catch (error: any) {
+      // Check if error is due to RLS policy (unauthorized)
+      const isUnauthorized = error.message?.includes('permission') || 
+                            error.message?.includes('policy') || 
+                            error.code === 'PGRST301' ||
+                            error.code === '42501';
+      
       toast({
         title: "Error",
-        description: error.message,
+        description: isUnauthorized 
+          ? "You don't have permission to add experts. Admin access required."
+          : error.message,
         variant: "destructive"
       });
     }
@@ -443,9 +451,17 @@ const Resources = () => {
       });
       loadExperts();
     } catch (error: any) {
+      // Check if error is due to RLS policy (unauthorized)
+      const isUnauthorized = error.message?.includes('permission') || 
+                            error.message?.includes('policy') || 
+                            error.code === 'PGRST301' ||
+                            error.code === '42501';
+      
       toast({
         title: "Error",
-        description: error.message,
+        description: isUnauthorized 
+          ? "You don't have permission to delete experts. Admin access required."
+          : error.message,
         variant: "destructive"
       });
     }
