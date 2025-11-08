@@ -15,6 +15,28 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import LocationSelector from "@/components/LocationSelector";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { z } from "zod";
+
+// Validation schemas
+const expertSchema = z.object({
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name must be less than 100 characters"),
+  specialization: z.string().trim().min(2, "Specialization must be at least 2 characters").max(100, "Specialization must be less than 100 characters"),
+  location: z.string().trim().min(2, "Location must be at least 2 characters").max(100, "Location must be less than 100 characters"),
+  phone: z.string().trim().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format"),
+  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
+  whatsapp_link: z.string().trim().max(255, "WhatsApp link must be less than 255 characters").optional()
+});
+
+const pdfUploadSchema = z.object({
+  title: z.string().trim().min(3, "Title must be at least 3 characters").max(100, "Title must be less than 100 characters"),
+  description: z.string().trim().max(1000, "Description must be less than 1000 characters").optional(),
+  category: z.string().trim().min(2, "Category is required").max(50, "Category must be less than 50 characters")
+});
+
+const consultationSchema = z.object({
+  subject: z.string().trim().min(5, "Subject must be at least 5 characters").max(200, "Subject must be less than 200 characters"),
+  description: z.string().trim().min(10, "Description must be at least 10 characters").max(2000, "Description must be less than 2000 characters")
+});
 
 const Resources = () => {
   const { user } = useAuth();
@@ -226,10 +248,26 @@ const Resources = () => {
   };
 
   const handleUploadPDF = async () => {
-    if (!pdfFile || !pdfTitle || !pdfCategory) {
+    if (!pdfFile) {
       toast({
-        title: "Missing Information",
-        description: "Please fill all required fields",
+        title: "Missing File",
+        description: "Please select a PDF file to upload",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate input
+    const validation = pdfUploadSchema.safeParse({
+      title: pdfTitle,
+      description: pdfDescription,
+      category: pdfCategory
+    });
+
+    if (!validation.success) {
+      toast({
+        title: "Validation Error",
+        description: validation.error.errors[0].message,
         variant: "destructive"
       });
       return;
@@ -318,10 +356,20 @@ const Resources = () => {
   };
 
   const handleCreateExpert = async () => {
-    if (!expertName || !expertSpec || !expertLocation || !expertPhone || !expertEmail) {
+    // Validate input
+    const validation = expertSchema.safeParse({
+      name: expertName,
+      specialization: expertSpec,
+      location: expertLocation,
+      phone: expertPhone,
+      email: expertEmail,
+      whatsapp_link: expertWhatsApp || undefined
+    });
+
+    if (!validation.success) {
       toast({
-        title: "Missing Information",
-        description: "Please fill all required fields",
+        title: "Validation Error",
+        description: validation.error.errors[0].message,
         variant: "destructive"
       });
       return;
@@ -331,12 +379,12 @@ const Resources = () => {
       const { error } = await supabase
         .from('agricultural_experts')
         .insert({
-          name: expertName,
-          specialization: expertSpec,
-          location: expertLocation,
-          phone: expertPhone,
-          email: expertEmail,
-          whatsapp_link: expertWhatsApp
+          name: validation.data.name,
+          specialization: validation.data.specialization,
+          location: validation.data.location,
+          phone: validation.data.phone,
+          email: validation.data.email,
+          whatsapp_link: validation.data.whatsapp_link
         });
 
       if (error) throw error;
@@ -387,10 +435,16 @@ const Resources = () => {
   };
 
   const handleSubmitConsultation = async () => {
-    if (!subject || !description) {
+    // Validate input
+    const validation = consultationSchema.safeParse({
+      subject: subject,
+      description: description
+    });
+
+    if (!validation.success) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all fields",
+        title: "Validation Error",
+        description: validation.error.errors[0].message,
         variant: "destructive"
       });
       return;

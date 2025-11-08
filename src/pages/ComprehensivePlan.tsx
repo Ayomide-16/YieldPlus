@@ -16,6 +16,17 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, R
 import DataSources from "@/components/DataSources";
 import ClimateRecommendations from "@/components/ClimateRecommendations";
 import { Printer } from "lucide-react";
+import { z } from "zod";
+
+// Validation schema for farm creation
+const farmSchema = z.object({
+  farmName: z.string().trim().min(2, "Farm name must be at least 2 characters").max(100, "Farm name must be less than 100 characters"),
+  farmSize: z.string().trim().refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, "Farm size must be a positive number"),
+  soilType: z.string().trim().max(50, "Soil type must be less than 50 characters").optional(),
+  waterSource: z.string().trim().max(50, "Water source must be less than 50 characters").optional(),
+  irrigationMethod: z.string().trim().max(50, "Irrigation method must be less than 50 characters").optional(),
+  cropTypes: z.string().trim().max(500, "Crop types must be less than 500 characters").optional()
+});
 
 const ComprehensivePlan = () => {
   const { user } = useAuth();
@@ -73,21 +84,40 @@ const ComprehensivePlan = () => {
   };
 
   const handleCreateFarm = async () => {
-    if (!farmName || !location.country || !farmSize) {
-      toast({ title: t("farmPlanner.missingInfo"), description: t("farmPlanner.fillDetails"), variant: "destructive" });
+    if (!location.country) {
+      toast({ title: t("farmPlanner.missingInfo"), description: "Please select a location", variant: "destructive" });
+      return;
+    }
+
+    // Validate input
+    const validation = farmSchema.safeParse({
+      farmName,
+      farmSize,
+      soilType,
+      waterSource,
+      irrigationMethod,
+      cropTypes
+    });
+
+    if (!validation.success) {
+      toast({ 
+        title: "Validation Error", 
+        description: validation.error.errors[0].message, 
+        variant: "destructive" 
+      });
       return;
     }
 
     const { data, error } = await supabase
       .from('farms')
       .insert({
-        farm_name: farmName,
+        farm_name: validation.data.farmName,
         location: location,
-        total_size: parseFloat(farmSize),
-        soil_type: soilType,
-        water_source: waterSource,
-        irrigation_method: irrigationMethod,
-        crops: cropTypes.split(',').map(c => c.trim()),
+        total_size: parseFloat(validation.data.farmSize),
+        soil_type: validation.data.soilType,
+        water_source: validation.data.waterSource,
+        irrigation_method: validation.data.irrigationMethod,
+        crops: validation.data.cropTypes ? validation.data.cropTypes.split(',').map(c => c.trim()) : [],
         user_id: user?.id
       })
       .select()
