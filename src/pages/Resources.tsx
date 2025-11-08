@@ -180,7 +180,30 @@ const Resources = () => {
       .select('*')
       .order('created_at', { ascending: false });
     
-    setPdfs(data || []);
+    // Generate signed URLs for each PDF
+    if (data) {
+      const pdfsWithSignedUrls = await Promise.all(
+        data.map(async (pdf) => {
+          // Skip if file_url looks like a legacy public URL
+          if (pdf.file_url.includes('supabase.co/storage')) {
+            return pdf;
+          }
+          
+          // Generate signed URL (valid for 1 hour)
+          const { data: signedData, error } = await supabase.storage
+            .from('study-materials')
+            .createSignedUrl(pdf.file_url, 3600);
+          
+          return {
+            ...pdf,
+            file_url: error ? pdf.file_url : signedData.signedUrl
+          };
+        })
+      );
+      setPdfs(pdfsWithSignedUrls);
+    } else {
+      setPdfs([]);
+    }
     setLoading(false);
   };
 
@@ -283,12 +306,7 @@ const Resources = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('study-materials')
-        .getPublicUrl(filePath);
-
-      // Save metadata to database
+      // Save metadata to database with file path (not public URL)
       const { error: dbError } = await supabase
         .from('agricultural_resources')
         .insert({
@@ -296,7 +314,7 @@ const Resources = () => {
           title: pdfTitle,
           description: pdfDescription,
           category: pdfCategory,
-          file_url: publicUrl,
+          file_url: filePath, // Store file path instead of public URL
           file_type: pdfFile.type,
           file_size: pdfFile.size
         });
@@ -325,10 +343,9 @@ const Resources = () => {
     }
   };
 
-  const handleDeletePDF = async (id: string, fileUrl: string) => {
+  const handleDeletePDF = async (id: string, filePath: string) => {
     try {
-      // Delete from storage
-      const filePath = fileUrl.split('/').pop();
+      // Delete from storage using the stored file path
       if (filePath) {
         await supabase.storage.from('study-materials').remove([filePath]);
       }

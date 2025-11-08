@@ -349,13 +349,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "expert_consultations_expert_id_fkey"
-            columns: ["expert_id"]
-            isOneToOne: false
-            referencedRelation: "experts_public_info"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "expert_consultations_farm_id_fkey"
             columns: ["farm_id"]
             isOneToOne: false
@@ -820,30 +813,7 @@ export type Database = {
       }
     }
     Views: {
-      experts_public_info: {
-        Row: {
-          created_at: string | null
-          id: string | null
-          location: string | null
-          name: string | null
-          specialization: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string | null
-          location?: string | null
-          name?: string | null
-          specialization?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string | null
-          location?: string | null
-          name?: string | null
-          specialization?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       get_expert_contact_info: {
