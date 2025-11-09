@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, Tractor, Save, Plus, Calendar, TrendingUp, Sprout, DollarSign } from "lucide-react";
+import { UnitSelector, convertToHectares } from "@/components/UnitSelector";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from "recharts";
@@ -41,6 +42,7 @@ const ComprehensivePlan = () => {
   const [farmName, setFarmName] = useState("");
   const [location, setLocation] = useState({ country: "", state: "", localGovernment: "" });
   const [farmSize, setFarmSize] = useState("");
+  const [farmUnit, setFarmUnit] = useState("hectares");
   const [soilType, setSoilType] = useState("");
   const [waterSource, setWaterSource] = useState("");
   const [irrigationMethod, setIrrigationMethod] = useState("");
@@ -108,12 +110,15 @@ const ComprehensivePlan = () => {
       return;
     }
 
+    // Convert farm size to hectares for storage
+    const sizeInHectares = convertToHectares(parseFloat(validation.data.farmSize), farmUnit);
+    
     const { data, error } = await supabase
       .from('farms')
       .insert({
         farm_name: validation.data.farmName,
         location: location,
-        total_size: parseFloat(validation.data.farmSize),
+        total_size: sizeInHectares,
         soil_type: validation.data.soilType,
         water_source: validation.data.waterSource,
         irrigation_method: validation.data.irrigationMethod,
@@ -334,6 +339,10 @@ const ComprehensivePlan = () => {
                     <Label>{t('farmPlanner.farmSize')} *</Label>
                     <Input type="number" value={farmSize} onChange={(e) => setFarmSize(e.target.value)} placeholder="10" />
                   </div>
+                  <UnitSelector value={farmUnit} onChange={setFarmUnit} label={t('farmPlanner.unit') || "Unit"} />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label>{t('farmPlanner.soilType')}</Label>
                     <Select value={soilType} onValueChange={setSoilType}>

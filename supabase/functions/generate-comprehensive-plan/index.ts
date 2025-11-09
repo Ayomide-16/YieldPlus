@@ -67,9 +67,17 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const systemPrompt = `You are an expert agricultural consultant providing comprehensive farm planning.
-    Use real agricultural research data and cite reputable sources like FAO, CGIAR, national agricultural departments.
-    Consider climate data, soil conditions, market trends, and local farming practices.`;
+    const systemPrompt = `You are an expert agricultural consultant providing comprehensive farm planning with a focus on profitability and sustainability.
+    
+    CRITICAL PRIORITIES:
+    1. PROFITABILITY: Analyze current market prices and trends to recommend crops that maximize farmer income
+    2. SUSTAINABILITY: Ensure recommendations follow environmental best practices including crop rotation
+    3. MARKET ANALYSIS: Base crop recommendations primarily on market demand, pricing trends, and expected ROI
+    4. CROP ROTATION: Always include proper crop rotation strategies to maintain soil health and prevent nutrient depletion
+    5. ENVIRONMENTAL FRIENDLINESS: Prioritize methods that reduce environmental impact while maintaining profitability
+    
+    Use real agricultural research data and cite reputable sources like FAO, CGIAR, national agricultural departments, and local market data.
+    Consider climate data, soil conditions, market trends, local farming practices, and sustainable agriculture principles.`;
 
     const userPrompt = `Create a comprehensive farm plan with these details:
     
@@ -110,6 +118,11 @@ serve(async (req) => {
         "dataSources": [{"name": "Source", "url": "URL"}]
       },
       "cropManagement": {
+        "profitabilityAnalysis": {
+          "summary": "Overview of most profitable crops based on current market",
+          "marketTrends": "Current market demand and price trends",
+          "reasoning": "Why these crops maximize profitability"
+        },
         "recommendedCrops": [
           {
             "crop": "Crop name",
@@ -117,18 +130,34 @@ serve(async (req) => {
             "plantingDate": "YYYY-MM-DD",
             "harvestDate": "YYYY-MM-DD",
             "expectedYield": "Yield per hectare",
-            "marketValue": "Current market price",
+            "marketValue": "Current market price per kg",
+            "projectedRevenue": "Revenue per hectare",
+            "profitMargin": "Expected profit margin %",
+            "marketDemand": "high/medium/low",
+            "priceStability": "stable/volatile",
             "spacing": "Plant spacing",
-            "seedRate": "Seeds per hectare"
+            "seedRate": "Seeds per hectare",
+            "sustainabilityScore": "Environmental impact rating",
+            "rotationBenefit": "How it benefits crop rotation"
           }
         ],
         "cropRotation": {
-          "plan": "Rotation strategy",
-          "benefits": ["benefit1", "benefit2"]
+          "plan": "Multi-season rotation strategy to maintain soil health",
+          "season1": "Crops for first season",
+          "season2": "Crops for second season", 
+          "season3": "Crops for third season",
+          "benefits": ["Prevents soil nutrient depletion", "Reduces pest/disease buildup", "benefit3"],
+          "profitabilityImpact": "How rotation affects long-term profitability"
+        },
+        "sustainability": {
+          "practices": ["Sustainable practice 1", "practice 2"],
+          "environmentalBenefits": ["benefit1", "benefit2"],
+          "longTermViability": "Why this approach is sustainable"
         },
         "intercropping": {
           "combinations": ["combination1"],
-          "benefits": ["benefit1"]
+          "benefits": ["benefit1"],
+          "profitability": "How intercropping affects income"
         }
       },
       "soilManagement": {
@@ -194,18 +223,27 @@ serve(async (req) => {
       },
       "marketStrategy": {
         "priceAnalysis": {
-          "currentPrices": [{"crop": "Crop", "price": "Price per kg"}],
-          "trends": "Market trend description",
-          "bestSellingTime": "Optimal selling period"
+          "currentPrices": [{"crop": "Crop", "price": "Price per kg", "demand": "high/medium/low"}],
+          "historicalTrends": "6-month price trend for recommended crops",
+          "forecastTrends": "Expected price movements",
+          "bestSellingTime": "Optimal selling period for maximum profit",
+          "competitiveAdvantage": "Why these crops are profitable in this location"
+        },
+        "profitMaximization": {
+          "highestRevenueCrops": ["Top 3 crops by revenue"],
+          "quickestReturnCrops": ["Fastest crops to profit"],
+          "balancedApproach": "Recommended mix for risk management and sustained income"
         },
         "valueAddition": [
           {
             "method": "Processing method",
             "priceIncrease": "Percentage increase",
-            "requirements": ["requirement1"]
+            "requirements": ["requirement1"],
+            "profitability": "Additional profit potential"
           }
         ],
-        "marketAccess": ["market option1", "market option2"]
+        "marketAccess": ["market option1", "market option2"],
+        "riskDiversification": "How to balance high-profit and stable-income crops"
       },
       "financialProjection": {
         "startup": {
@@ -273,7 +311,14 @@ serve(async (req) => {
       }
     }
     
-    Make projections realistic and cite specific agricultural sources.`;
+    IMPORTANT INSTRUCTIONS:
+    - Prioritize crops with the HIGHEST market value and demand
+    - Include detailed market price analysis showing why recommended crops maximize profit
+    - Provide a comprehensive crop rotation plan that maintains profitability across seasons
+    - Balance short-term profit (fast-growing crops) with long-term sustainability (crop rotation, soil health)
+    - Cite specific market data and agricultural sources
+    - Include environmental sustainability metrics for each crop recommendation
+    - Make all financial projections realistic based on current market prices`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
