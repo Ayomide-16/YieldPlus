@@ -74,9 +74,22 @@ serve(async (req) => {
     };
     const currency = currencyMap[location?.country] || currencyMap.default;
 
-    const systemPrompt = `You are an expert agricultural economist with access to FAO, World Bank, national agricultural market data, and climate data from NASA POWER and NOAA NCEI. Provide comprehensive, data-rich market analysis with extensive historical data, forecasts, seasonal climate context, profitability analysis, and chart data in JSON format. Always cite reputable sources. If the crop type is invalid or doesn't exist, return an error message with suggestions. Use ${currency} for all price calculations.`;
+    const systemPrompt = `You are an expert agricultural economist and market analyst with deep expertise in price forecasting and trend analysis. You have access to FAO, World Bank, national agricultural market databases, and climate data from NASA POWER and NOAA NCEI.
 
-    // Query historical price data
+**Your Role**: Provide PREDICTIVE market intelligence and strategic guidance, not just historical data reporting.
+
+**Core Principles**:
+1. ANALYZE trends and patterns in historical data to make forward-looking predictions
+2. IDENTIFY seasonal cycles, supply-demand dynamics, and market forces
+3. SYNTHESIZE multiple data sources (local historical + global market trends + climate factors)
+4. PROVIDE actionable insights and strategic recommendations
+5. EXPLAIN your reasoning and confidence levels
+
+**Critical**: This is a DECISION-SUPPORT tool. Farmers need guidance on optimal selling strategies based on predicted future prices, not just current/past prices. Use ${currency} for all price calculations.
+
+If the crop type is invalid, return an error with suggestions for valid crops.`;
+
+    // Query historical price data - fuzzy search for related crop varieties
     console.log('Querying historical market prices...');
     const { data: historicalData, error: dbError } = await supabase
       .from('market_prices')
@@ -84,69 +97,122 @@ serve(async (req) => {
       .ilike('food_item', `%${cropType}%`)
       .eq('state', location.state)
       .order('date', { ascending: false })
-      .limit(1000);
+      .limit(2000);
 
     if (dbError) {
       console.error('Error fetching historical data:', dbError);
     }
 
+    // Group data by food_item varieties and calculate trends
+    const varietiesFound = historicalData ? [...new Set(historicalData.map(r => r.food_item))] : [];
+    const pricesByDate = historicalData ? historicalData.reduce((acc, record) => {
+      const dateKey = record.date;
+      if (!acc[dateKey]) acc[dateKey] = [];
+      acc[dateKey].push(record.uprice);
+      return acc;
+    }, {} as Record<string, number[]>) : {};
+
     const historicalContext = historicalData && historicalData.length > 0
-      ? `\n\n**HISTORICAL PRICE DATA AVAILABLE** (${historicalData.length} records):
+      ? `\n\n**HISTORICAL MARKET DATA FOR ANALYSIS** (${historicalData.length} records):
       
-Recent prices for ${cropType} in ${location.state}:
+**Crop Varieties Found**: ${varietiesFound.join(', ')}
+
+**Recent Price Samples** (last 20 records for ${cropType} in ${location.state}):
 ${historicalData.slice(0, 20).map(record => 
-  `- ${record.date}: ${currency}${record.uprice}/kg in ${record.lga} (${record.sector}, ${record.outlet_type})`
+  `- ${record.date}: ${currency}${record.uprice}/kg (${record.food_item}) in ${record.lga} - ${record.outlet_type}`
 ).join('\n')}
 
-Statistical Summary from your database:
-- Latest Price: ${currency}${historicalData[0]?.uprice || 'N/A'}/kg
-- Average Price (last 100 records): ${currency}${(historicalData.slice(0, 100).reduce((sum, r) => sum + r.uprice, 0) / Math.min(100, historicalData.length)).toFixed(2)}/kg
-- Price Range: ${currency}${Math.min(...historicalData.map(r => r.uprice))}/kg - ${currency}${Math.max(...historicalData.map(r => r.uprice))}/kg
-- LGAs with data: ${[...new Set(historicalData.map(r => r.lga))].join(', ')}
+**Statistical Analysis**:
+- Latest Recorded Price: ${currency}${historicalData[0]?.uprice || 'N/A'}/kg (${historicalData[0]?.date})
+- Average Price (recent 100 records): ${currency}${(historicalData.slice(0, 100).reduce((sum, r) => sum + r.uprice, 0) / Math.min(100, historicalData.length)).toFixed(2)}/kg
+- Minimum Price: ${currency}${Math.min(...historicalData.map(r => r.uprice))}/kg
+- Maximum Price: ${currency}${Math.max(...historicalData.map(r => r.uprice))}/kg
+- LGAs with data: ${[...new Set(historicalData.map(r => r.lga))].slice(0, 10).join(', ')}
 
-**IMPORTANT**: Use this REAL historical data as the PRIMARY source for your price estimates. Your estimates MUST be based on these actual market prices, not general knowledge.`
-      : '\n\n**Note**: No historical price data found in database for this crop and location. Base estimates on general market knowledge.';
+**YOUR TASK**: 
+1. Analyze the TRENDS in this historical data (not just the last price)
+2. Identify seasonal patterns and price movements over time
+3. Consider the different varieties found (${varietiesFound.join(', ')})
+4. Make INTELLIGENT PREDICTIONS based on:
+   - Historical price trends and patterns
+   - Seasonal factors affecting the harvest date (${harvestDate})
+   - Current market conditions and online data sources
+   - Supply and demand dynamics
+5. Provide FORWARD-LOOKING insights, not just historical data copy-paste
+6. If you see price increases/decreases over time, explain why and predict future movements
 
-    const userPrompt = `Estimate market prices and provide selling strategy for:
+**CRITICAL**: This is a GUIDANCE tool. Users need predictive analysis and recommendations, not just historical data regurgitation.`
+      : '\n\n**Note**: No historical price data found in database for this crop and location. Use general market knowledge and online sources to provide predictions.';
+
+    const userPrompt = `**MARKET ANALYSIS REQUEST**:
     
-    Crop Type: ${cropType}
-    ${expectedYield ? `Expected Yield: ${expectedYield} ${yieldUnit}` : `Farm Size: ${farmSize} hectares (auto-predict yield based on average productivity)`}
-    Location: ${location.country}, ${location.state}, ${location.localGovernment}
-    Expected Harvest Date: ${harvestDate}
-    Currency: ${currency}
-    ${historicalContext}
-    
-    IMPORTANT: First, verify if "${cropType}" is a valid, real crop. If it's not a real crop or you're unsure about it, return ONLY this structure:
-    {
-      "error": "The crop '${cropType}' is not recognized as a valid agricultural crop. Please enter a valid crop name such as: Maize, Rice, Wheat, Cassava, Yam, Soybeans, Tomatoes, etc."
-    }
-    
-    If it IS a valid crop, provide comprehensive analysis in JSON format (use ${currency} for all prices) with these exact keys:
-    {
-      "summary": "Brief market overview with seasonal climate context",
-      "priceEstimate": {"lowPrice": "₦X/kg", "averagePrice": "₦X/kg", "highPrice": "₦X/kg", "forecastAccuracy": "85%", "totalRevenue": "₦X", "pricePerTon": "₦X/ton"},
-      "historicalPrices": [{"month": "Jan", "price": 450, "demand": 75}, {"month": "Feb", "price": 480, "demand": 80}],
-      "marketTrends": [{"factor": "Factor", "impact": "Impact analysis", "trend": "Upward", "confidence": "High"}],
-      "demandAnalysis": {"currentDemand": "High", "seasonalPattern": "Pattern", "competitionLevel": "Medium", "supplyGap": "Analysis"},
-      "seasonalClimateImpact": {
-        "harvestSeasonWeather": "Weather conditions during harvest period based on NASA POWER data",
-        "storageConditions": "Climate-based storage recommendations",
-        "transportRecommendations": "Climate considerations for transport timing"
-      },
-      "priceForecast": [{"period": "Next Month", "estimatedPrice": "₦X/kg", "confidence": "85%", "climateFactors": "Climate impacts on price"}],
-      "sellingStrategy": "Comprehensive strategy with optimal selling timing based on climate and market data",
-      "marketChannels": [{"channel": "Local Market", "priceRange": "₦X-Y/kg", "volume": "X tons", "paymentTerms": "Terms", "recommendation": "High"}],
-      "riskFactors": [{"risk": "Risk", "probability": "Medium", "impact": "High", "mitigation": "Strategy"}],
-      "profitabilityAnalysis": {"grossRevenue": "₦X", "estimatedCosts": "₦X", "netProfit": "₦X", "profitMargin": "X%", "breakEvenPoint": "X kg"},
-      "dataSources": [
-        {"name": "FAO", "url": "http://www.fao.org/"},
-        {"name": "World Bank", "url": "https://www.worldbank.org/"},
-        {"name": "NASA POWER", "url": "https://power.larc.nasa.gov/"},
-        {"name": "NOAA NCEI", "url": "https://www.ncei.noaa.gov/"}
-      ]
-    }
-    
-    Provide data for all 12 months in historicalPrices for charts. Include seasonal climate context and cite reputable sources.`;
+**Crop Details**:
+- Crop Type: ${cropType}
+- ${expectedYield ? `Expected Yield: ${expectedYield} ${yieldUnit}` : `Farm Size: ${farmSize} hectares`}
+- Location: ${location.country}, ${location.state}, ${location.localGovernment}
+- Expected Harvest Date: ${harvestDate}
+- Currency: ${currency}
+
+${historicalContext}
+
+**ANALYSIS REQUIREMENTS**:
+
+1. **Crop Validation**: First verify if "${cropType}" is a valid agricultural crop. If NOT valid, return:
+   {
+     "error": "The crop '${cropType}' is not recognized. Valid examples: Maize, Rice, Beans, Cassava, Yam, Soybeans, Tomatoes, etc."
+   }
+
+2. **Trend Analysis** (if valid crop):
+   - Review ALL crop varieties found in the historical data
+   - Identify price trends over time (increasing, decreasing, stable, seasonal)
+   - Calculate growth rates and seasonal patterns
+   - Compare different market outlets and sectors
+
+3. **Predictive Modeling**:
+   - Forecast prices for the harvest date based on:
+     * Historical seasonal patterns
+     * Recent price movements and momentum
+     * Supply-demand dynamics
+     * Climate and weather factors
+     * Market channel differences
+   - Provide confidence intervals for predictions
+
+4. **Strategic Recommendations**:
+   - Optimal selling timing (immediate vs. storage)
+   - Best market channels for maximum revenue
+   - Risk mitigation strategies
+   - Price negotiation insights
+
+**OUTPUT FORMAT**: Comprehensive JSON analysis with these exact keys:
+{
+  "summary": "Predictive market overview with trend analysis",
+  "priceEstimate": {
+    "lowPrice": "${currency}X/kg", 
+    "averagePrice": "${currency}X/kg", 
+    "highPrice": "${currency}X/kg",
+    "forecastAccuracy": "85%",
+    "totalRevenue": "${currency}X",
+    "pricePerTon": "${currency}X/ton",
+    "trendDirection": "Increasing/Decreasing/Stable",
+    "confidenceLevel": "High/Medium/Low"
+  },
+  "historicalPrices": [{"month": "Jan", "price": 450, "demand": 75}, ...12 months],
+  "marketTrends": [{"factor": "Factor", "impact": "Impact analysis", "trend": "Upward/Downward", "confidence": "High"}],
+  "demandAnalysis": {"currentDemand": "High", "seasonalPattern": "Pattern", "competitionLevel": "Medium", "supplyGap": "Analysis"},
+  "seasonalClimateImpact": {
+    "harvestSeasonWeather": "Weather predictions for harvest period",
+    "storageConditions": "Climate-based storage recommendations",
+    "transportRecommendations": "Timing considerations"
+  },
+  "priceForecast": [{"period": "Next Month", "estimatedPrice": "${currency}X/kg", "confidence": "85%", "climateFactors": "Impact analysis"}],
+  "sellingStrategy": "Comprehensive strategy with optimal timing and rationale",
+  "marketChannels": [{"channel": "Channel name", "priceRange": "${currency}X-Y/kg", "volume": "X tons", "paymentTerms": "Terms", "recommendation": "High/Medium/Low"}],
+  "riskFactors": [{"risk": "Risk description", "probability": "High/Medium/Low", "impact": "High/Medium/Low", "mitigation": "Strategy"}],
+  "profitabilityAnalysis": {"grossRevenue": "${currency}X", "estimatedCosts": "${currency}X", "netProfit": "${currency}X", "profitMargin": "X%", "breakEvenPoint": "X kg"},
+  "dataSources": [{"name": "Source", "url": "URL"}]
+}
+
+**Remember**: Provide PREDICTIVE insights based on trend analysis, not just copy-paste of last known prices.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
