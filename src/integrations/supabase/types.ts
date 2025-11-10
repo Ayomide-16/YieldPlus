@@ -452,6 +452,45 @@ export type Database = {
         }
         Relationships: []
       }
+      market_prices: {
+        Row: {
+          created_at: string
+          date: string
+          food_item: string
+          id: string
+          lga: string
+          outlet_type: string
+          price_category: string
+          sector: string
+          state: string
+          uprice: number
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          food_item: string
+          id?: string
+          lga: string
+          outlet_type: string
+          price_category: string
+          sector: string
+          state: string
+          uprice: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          food_item?: string
+          id?: string
+          lga?: string
+          outlet_type?: string
+          price_category?: string
+          sector?: string
+          state?: string
+          uprice?: number
+        }
+        Relationships: []
+      }
       payment_contracts: {
         Row: {
           amount: number
