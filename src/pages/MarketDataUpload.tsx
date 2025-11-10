@@ -15,41 +15,92 @@ const MarketDataUpload = () => {
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<{ inserted: number; total: number; errors?: string[] } | null>(null);
 
+  const generateSampleCSV = () => {
+    const sampleData = `Date\tState\tLGA\tOutlet Type\tCountry\tSector\tFood Item\tPrice Category\tUPRICE
+27/11/2024\tABIA\tUMUAHIA NORTH\tOpen air or covered market\tNigeria\tUrban\tBrown beans\tRetail\t8000
+27/11/2024\tABIA\tBENDE\tOpen air or covered market\tNigeria\tRural\tBrown beans\tRetail\t3000
+28/11/2024\tLAGOS\tIKEJA\tOpen air or covered market\tNigeria\tUrban\tRice\tRetail\t1500`;
+    
+    const blob = new Blob([sampleData], { type: 'text/tab-separated-values' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sample_market_data.tsv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Sample file downloaded!");
+  };
+
   const parseCSV = (text: string): any[] => {
+    console.log('=== CSV PARSING DEBUG ===');
+    console.log('Raw text length:', text.length);
+    console.log('First 200 characters:', JSON.stringify(text.substring(0, 200)));
+    
+    // Detect separator (tab or comma)
+    const firstLine = text.split(/\r?\n/)[0];
+    const hasTabs = firstLine.includes('\t');
+    const hasCommas = firstLine.includes(',');
+    const separator = hasTabs ? '\t' : ',';
+    
+    console.log('Detected separator:', separator === '\t' ? 'TAB' : 'COMMA');
+    console.log('First line:', firstLine);
+    
     // Handle both \n and \r\n line endings
     const lines = text.split(/\r?\n/).filter(line => line.trim());
     
     if (lines.length < 2) {
       console.error('CSV has less than 2 lines');
+      toast.error('CSV file must have at least a header row and one data row');
       return [];
     }
     
-    console.log(`Total lines: ${lines.length}`);
-    console.log('First line:', lines[0]);
-    console.log('Second line:', lines[1]);
+    console.log(`Total lines (including header): ${lines.length}`);
+    console.log('Header:', lines[0]);
+    console.log('Sample data line:', lines[1]);
     
     const records = [];
+    let skippedLines = 0;
+    let errorDetails: string[] = [];
+    
     for (let i = 1; i < lines.length; i++) {
       try {
-        const values = lines[i].split('\t');
+        const values = lines[i].split(separator);
+        
+        // Log first few lines for debugging
+        if (i <= 3) {
+          console.log(`Line ${i} split into ${values.length} columns:`, values);
+        }
         
         // Skip if not enough columns
         if (values.length < 9) {
-          console.warn(`Line ${i} has only ${values.length} columns, skipping`);
+          skippedLines++;
+          if (skippedLines <= 5) {
+            errorDetails.push(`Line ${i}: Only ${values.length} columns (need 9)`);
+          }
           continue;
         }
         
         // Parse date from DD/MM/YYYY to YYYY-MM-DD
-        const dateParts = values[0].trim().split('/');
+        const dateStr = values[0].trim();
+        const dateParts = dateStr.split('/');
         if (dateParts.length !== 3) {
-          console.warn(`Line ${i} has invalid date format: ${values[0]}`);
+          skippedLines++;
+          if (skippedLines <= 5) {
+            errorDetails.push(`Line ${i}: Invalid date format "${dateStr}"`);
+          }
           continue;
         }
         const formattedDate = `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0].padStart(2, '0')}`;
         
-        const price = parseFloat(values[8].trim());
+        const priceStr = values[8].trim();
+        const price = parseFloat(priceStr);
         if (isNaN(price)) {
-          console.warn(`Line ${i} has invalid price: ${values[8]}`);
+          skippedLines++;
+          if (skippedLines <= 5) {
+            errorDetails.push(`Line ${i}: Invalid price "${priceStr}"`);
+          }
           continue;
         }
         
@@ -64,12 +115,25 @@ const MarketDataUpload = () => {
           uprice: price
         });
       } catch (error) {
-        console.error(`Error parsing line ${i}:`, error);
+        skippedLines++;
+        if (skippedLines <= 5) {
+          errorDetails.push(`Line ${i}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
         continue;
       }
     }
     
-    console.log(`Successfully parsed ${records.length} records`);
+    console.log(`=== PARSING COMPLETE ===`);
+    console.log(`Successfully parsed: ${records.length} records`);
+    console.log(`Skipped: ${skippedLines} lines`);
+    if (errorDetails.length > 0) {
+      console.log('First few errors:', errorDetails);
+    }
+    
+    if (records.length > 0) {
+      console.log('Sample parsed record:', records[0]);
+    }
+    
     return records;
   };
 
@@ -183,9 +247,16 @@ const MarketDataUpload = () => {
                 <ul className="list-disc list-inside mt-2 text-sm">
                   <li>Columns: Date, State, LGA, Outlet Type, Country, Sector, Food Item, Price Category, UPRICE</li>
                   <li>Date format: DD/MM/YYYY (e.g., 27/11/2024)</li>
-                  <li>Tab-separated values</li>
+                  <li>Tab-separated or comma-separated values</li>
                   <li>First row should contain headers</li>
                 </ul>
+                <Button 
+                  variant="link" 
+                  onClick={generateSampleCSV}
+                  className="p-0 h-auto mt-2"
+                >
+                  Download Sample CSV File
+                </Button>
               </AlertDescription>
             </Alert>
 
