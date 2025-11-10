@@ -17,9 +17,8 @@ const MarketDataUpload = () => {
 
   const generateSampleCSV = () => {
     const sampleData = `Date\tState\tLGA\tOutlet Type\tCountry\tSector\tFood Item\tPrice Category\tUPRICE
-27/11/2024\tABIA\tUMUAHIA NORTH\tOpen air or covered market\tNigeria\tUrban\tBrown beans\tRetail\t8000
-27/11/2024\tABIA\tBENDE\tOpen air or covered market\tNigeria\tRural\tBrown beans\tRetail\t3000
-28/11/2024\tLAGOS\tIKEJA\tOpen air or covered market\tNigeria\tUrban\tRice\tRetail\t1500`;
+16/05/2025\tRIVERS\tAHOADA EAST\tRoadSide shops street vendors\tNigeria\tUrban\tMaize yellow\tRetail\t1562.5
+16/05/2025\tABIA\tUKWA EAST\tOpen air or covered market\tNigeria\tRural\tMaize yellow\tRetail\t1875`;
     
     const blob = new Blob([sampleData], { type: 'text/tab-separated-values' });
     const url = URL.createObjectURL(blob);
@@ -34,104 +33,158 @@ const MarketDataUpload = () => {
   };
 
   const parseCSV = (text: string): any[] => {
-    console.log('=== CSV PARSING DEBUG ===');
+    console.log('=== CSV PARSING DEBUG START ===');
     console.log('Raw text length:', text.length);
-    console.log('First 200 characters:', JSON.stringify(text.substring(0, 200)));
+    console.log('First 300 characters:', JSON.stringify(text.substring(0, 300)));
     
-    // Detect separator (tab or comma)
-    const firstLine = text.split(/\r?\n/)[0];
-    const hasTabs = firstLine.includes('\t');
-    const hasCommas = firstLine.includes(',');
-    const separator = hasTabs ? '\t' : ',';
+    // Remove BOM if present
+    if (text.charCodeAt(0) === 0xFEFF) {
+      text = text.slice(1);
+      console.log('BOM removed');
+    }
     
-    console.log('Detected separator:', separator === '\t' ? 'TAB' : 'COMMA');
-    console.log('First line:', firstLine);
+    // Split into lines - handle all line ending types
+    const lines = text.split(/\r\n|\r|\n/).filter(line => line.trim().length > 0);
     
-    // Handle both \n and \r\n line endings
-    const lines = text.split(/\r?\n/).filter(line => line.trim());
+    console.log(`Total non-empty lines: ${lines.length}`);
     
     if (lines.length < 2) {
-      console.error('CSV has less than 2 lines');
+      console.error('CSV must have at least 2 lines (header + 1 data row)');
       toast.error('CSV file must have at least a header row and one data row');
       return [];
     }
     
-    console.log(`Total lines (including header): ${lines.length}`);
-    console.log('Header:', lines[0]);
-    console.log('Sample data line:', lines[1]);
+    // Detect separator from header line
+    const headerLine = lines[0];
+    const tabCount = (headerLine.match(/\t/g) || []).length;
+    const commaCount = (headerLine.match(/,/g) || []).length;
+    const separator = tabCount > commaCount ? '\t' : ',';
+    
+    console.log('Header line:', headerLine);
+    console.log(`Detected separator: ${separator === '\t' ? 'TAB' : 'COMMA'} (tabs: ${tabCount}, commas: ${commaCount})`);
+    
+    const headerColumns = headerLine.split(separator);
+    console.log(`Header has ${headerColumns.length} columns:`, headerColumns.map(h => h.trim()));
+    
+    // Show first 3 data lines for debugging
+    for (let i = 1; i <= Math.min(3, lines.length - 1); i++) {
+      const cols = lines[i].split(separator);
+      console.log(`Data line ${i} (${cols.length} columns):`, cols);
+    }
     
     const records = [];
+    const errors: string[] = [];
     let skippedLines = 0;
-    let errorDetails: string[] = [];
     
+    // Start from line 1 (skip header at line 0)
     for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      
       try {
-        const values = lines[i].split(separator);
+        const values = line.split(separator);
         
-        // Log first few lines for debugging
-        if (i <= 3) {
-          console.log(`Line ${i} split into ${values.length} columns:`, values);
-        }
-        
-        // Skip if not enough columns
+        // Must have at least 9 columns
         if (values.length < 9) {
           skippedLines++;
-          if (skippedLines <= 5) {
-            errorDetails.push(`Line ${i}: Only ${values.length} columns (need 9)`);
+          if (errors.length < 10) {
+            errors.push(`Line ${i}: Only ${values.length} columns (expected 9)`);
           }
           continue;
         }
         
-        // Parse date from DD/MM/YYYY to YYYY-MM-DD
+        // Extract and validate date (column 0)
         const dateStr = values[0].trim();
+        if (!dateStr) {
+          skippedLines++;
+          if (errors.length < 10) errors.push(`Line ${i}: Empty date`);
+          continue;
+        }
+        
+        // Parse DD/MM/YYYY format
         const dateParts = dateStr.split('/');
         if (dateParts.length !== 3) {
           skippedLines++;
-          if (skippedLines <= 5) {
-            errorDetails.push(`Line ${i}: Invalid date format "${dateStr}"`);
-          }
+          if (errors.length < 10) errors.push(`Line ${i}: Invalid date format "${dateStr}" (expected DD/MM/YYYY)`);
           continue;
         }
-        const formattedDate = `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0].padStart(2, '0')}`;
         
-        const priceStr = values[8].trim();
-        const price = parseFloat(priceStr);
-        if (isNaN(price)) {
+        const day = dateParts[0].padStart(2, '0');
+        const month = dateParts[1].padStart(2, '0');
+        const year = dateParts[2];
+        
+        // Validate date components
+        if (year.length !== 4 || isNaN(Number(year)) || isNaN(Number(month)) || isNaN(Number(day))) {
           skippedLines++;
-          if (skippedLines <= 5) {
-            errorDetails.push(`Line ${i}: Invalid price "${priceStr}"`);
-          }
+          if (errors.length < 10) errors.push(`Line ${i}: Invalid date "${dateStr}"`);
+          continue;
+        }
+        
+        const formattedDate = `${year}-${month}-${day}`;
+        
+        // Extract and validate price (column 8)
+        const priceStr = values[8].trim();
+        if (!priceStr) {
+          skippedLines++;
+          if (errors.length < 10) errors.push(`Line ${i}: Empty price`);
+          continue;
+        }
+        
+        const price = parseFloat(priceStr);
+        if (isNaN(price) || price < 0) {
+          skippedLines++;
+          if (errors.length < 10) errors.push(`Line ${i}: Invalid price "${priceStr}"`);
+          continue;
+        }
+        
+        // Extract other fields
+        const state = values[1].trim();
+        const lga = values[2].trim();
+        const outlet_type = values[3].trim();
+        const sector = values[5].trim();
+        const food_item = values[6].trim();
+        const price_category = values[7].trim();
+        
+        // Validate required fields
+        if (!state || !lga || !outlet_type || !sector || !food_item || !price_category) {
+          skippedLines++;
+          if (errors.length < 10) errors.push(`Line ${i}: Missing required field(s)`);
           continue;
         }
         
         records.push({
           date: formattedDate,
-          state: values[1].trim(),
-          lga: values[2].trim(),
-          outlet_type: values[3].trim(),
-          sector: values[5].trim(),
-          food_item: values[6].trim(),
-          price_category: values[7].trim(),
+          state,
+          lga,
+          outlet_type,
+          sector,
+          food_item,
+          price_category,
           uprice: price
         });
+        
       } catch (error) {
         skippedLines++;
-        if (skippedLines <= 5) {
-          errorDetails.push(`Line ${i}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        if (errors.length < 10) {
+          errors.push(`Line ${i}: ${error instanceof Error ? error.message : 'Parse error'}`);
         }
-        continue;
       }
     }
     
-    console.log(`=== PARSING COMPLETE ===`);
-    console.log(`Successfully parsed: ${records.length} records`);
-    console.log(`Skipped: ${skippedLines} lines`);
-    if (errorDetails.length > 0) {
-      console.log('First few errors:', errorDetails);
+    console.log('=== PARSING COMPLETE ===');
+    console.log(`✓ Successfully parsed: ${records.length} records`);
+    console.log(`✗ Skipped: ${skippedLines} lines`);
+    
+    if (errors.length > 0) {
+      console.log('Errors (showing first 10):', errors);
     }
     
     if (records.length > 0) {
-      console.log('Sample parsed record:', records[0]);
+      console.log('Sample record:', records[0]);
+    }
+    
+    if (records.length === 0 && errors.length > 0) {
+      toast.error(`No valid records found. First error: ${errors[0]}`);
     }
     
     return records;
@@ -139,7 +192,9 @@ const MarketDataUpload = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      console.log('File selected:', selectedFile.name, 'Type:', selectedFile.type, 'Size:', selectedFile.size);
+      setFile(selectedFile);
       setResult(null);
     }
   };
@@ -150,7 +205,9 @@ const MarketDataUpload = () => {
       return;
     }
 
-    console.log('Starting upload for file:', file.name, 'Size:', file.size);
+    console.log('=== UPLOAD STARTED ===');
+    console.log('File:', file.name, 'Size:', file.size, 'Type:', file.type);
+    
     setUploading(true);
     setProgress(0);
     setResult(null);
@@ -159,20 +216,22 @@ const MarketDataUpload = () => {
       // Read file
       console.log('Reading file...');
       const text = await file.text();
-      console.log('File read complete. Length:', text.length);
-      console.log('First 500 chars:', text.substring(0, 500));
+      console.log(`File read complete. Length: ${text.length} characters`);
+      
+      if (text.length === 0) {
+        throw new Error('File is empty');
+      }
       
       const records = parseCSV(text);
       
       if (records.length === 0) {
-        toast.error("No valid records found in CSV");
         setUploading(false);
         return;
       }
 
-      toast.info(`Parsed ${records.length.toLocaleString()} records. Starting upload...`);
+      toast.info(`Parsed ${records.length.toLocaleString()} valid records. Starting upload...`);
 
-      // Upload in batches of 5000 to avoid timeouts
+      // Upload in batches of 5000
       const BATCH_SIZE = 5000;
       let totalInserted = 0;
       const allErrors: string[] = [];
@@ -180,11 +239,13 @@ const MarketDataUpload = () => {
       for (let i = 0; i < records.length; i += BATCH_SIZE) {
         const batch = records.slice(i, i + BATCH_SIZE);
         
+        console.log(`Uploading batch ${Math.floor(i / BATCH_SIZE) + 1}: ${batch.length} records`);
+        
         const { data: sessionData } = await supabase.auth.getSession();
         const token = sessionData?.session?.access_token;
 
         if (!token) {
-          throw new Error('Not authenticated');
+          throw new Error('Not authenticated. Please log in.');
         }
 
         const response = await supabase.functions.invoke('bulk-insert-market-prices', {
@@ -192,7 +253,8 @@ const MarketDataUpload = () => {
         });
 
         if (response.error) {
-          throw response.error;
+          console.error('Batch upload error:', response.error);
+          throw new Error(response.error.message || 'Upload failed');
         }
 
         if (response.data?.errors) {
@@ -200,7 +262,8 @@ const MarketDataUpload = () => {
         }
 
         totalInserted += response.data?.inserted || 0;
-        setProgress(Math.round((totalInserted / records.length) * 100));
+        const progressPercent = Math.round(((i + batch.length) / records.length) * 100);
+        setProgress(progressPercent);
         
         toast.success(`Uploaded ${totalInserted.toLocaleString()} / ${records.length.toLocaleString()} records`);
       }
@@ -213,7 +276,8 @@ const MarketDataUpload = () => {
 
       toast.success(`Successfully uploaded ${totalInserted.toLocaleString()} records!`);
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error('=== UPLOAD ERROR ===');
+      console.error(error);
       toast.error(error instanceof Error ? error.message : 'Upload failed');
     } finally {
       setUploading(false);
@@ -245,17 +309,18 @@ const MarketDataUpload = () => {
               <AlertDescription>
                 <strong>CSV Format Requirements:</strong>
                 <ul className="list-disc list-inside mt-2 text-sm">
-                  <li>Columns: Date, State, LGA, Outlet Type, Country, Sector, Food Item, Price Category, UPRICE</li>
-                  <li>Date format: DD/MM/YYYY (e.g., 27/11/2024)</li>
+                  <li>9 Columns: Date, State, LGA, Outlet Type, Country, Sector, Food Item, Price Category, UPRICE</li>
+                  <li>Date format: DD/MM/YYYY (e.g., 16/05/2025)</li>
                   <li>Tab-separated or comma-separated values</li>
-                  <li>First row should contain headers</li>
+                  <li>First row must contain headers</li>
+                  <li>All fields required except Country</li>
                 </ul>
                 <Button 
                   variant="link" 
                   onClick={generateSampleCSV}
-                  className="p-0 h-auto mt-2"
+                  className="p-0 h-auto mt-2 text-primary"
                 >
-                  Download Sample CSV File
+                  📥 Download Sample CSV File
                 </Button>
               </AlertDescription>
             </Alert>
@@ -264,7 +329,7 @@ const MarketDataUpload = () => {
               <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <input
                 type="file"
-                accept=".csv,.txt"
+                accept=".csv,.txt,.tsv"
                 onChange={handleFileChange}
                 className="hidden"
                 id="csv-upload"
