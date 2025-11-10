@@ -11,6 +11,7 @@ import CropPlanner from "./pages/CropPlanner";
 import SoilNutrientAdvisor from "./pages/SoilNutrientAdvisor";
 import WaterUsageOptimizer from "./pages/WaterUsageOptimizer";
 import MarketPriceEstimator from "./pages/MarketPriceEstimator";
+import MarketDataUpload from "./pages/MarketDataUpload";
 import ComprehensivePlan from "./pages/ComprehensivePlan";
 import PestIdentifier from "./pages/PestIdentifier";
 import FertilizerPlanner from "./pages/FertilizerPlanner";
@@ -43,6 +44,7 @@ const App = () => (
                     <Route path="/soil-advisor" element={<SoilNutrientAdvisor />} />
                     <Route path="/water-optimizer" element={<WaterUsageOptimizer />} />
                     <Route path="/market-estimator" element={<MarketPriceEstimator />} />
+                    <Route path="/market-data-upload" element={<MarketDataUpload />} />
                     <Route path="/comprehensive-plan" element={<ComprehensivePlan />} />
                     <Route path="/pest-identifier" element={<PestIdentifier />} />
                     <Route path="/fertilizer-planner" element={<FertilizerPlanner />} />

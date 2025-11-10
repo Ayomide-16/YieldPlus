@@ -76,6 +76,37 @@ serve(async (req) => {
 
     const systemPrompt = `You are an expert agricultural economist with access to FAO, World Bank, national agricultural market data, and climate data from NASA POWER and NOAA NCEI. Provide comprehensive, data-rich market analysis with extensive historical data, forecasts, seasonal climate context, profitability analysis, and chart data in JSON format. Always cite reputable sources. If the crop type is invalid or doesn't exist, return an error message with suggestions. Use ${currency} for all price calculations.`;
 
+    // Query historical price data
+    console.log('Querying historical market prices...');
+    const { data: historicalData, error: dbError } = await supabase
+      .from('market_prices')
+      .select('date, state, lga, food_item, uprice, sector, outlet_type')
+      .ilike('food_item', `%${cropType}%`)
+      .eq('state', location.state)
+      .order('date', { ascending: false })
+      .limit(1000);
+
+    if (dbError) {
+      console.error('Error fetching historical data:', dbError);
+    }
+
+    const historicalContext = historicalData && historicalData.length > 0
+      ? `\n\n**HISTORICAL PRICE DATA AVAILABLE** (${historicalData.length} records):
+      
+Recent prices for ${cropType} in ${location.state}:
+${historicalData.slice(0, 20).map(record => 
+  `- ${record.date}: ${currency}${record.uprice}/kg in ${record.lga} (${record.sector}, ${record.outlet_type})`
+).join('\n')}
+
+Statistical Summary from your database:
+- Latest Price: ${currency}${historicalData[0]?.uprice || 'N/A'}/kg
+- Average Price (last 100 records): ${currency}${(historicalData.slice(0, 100).reduce((sum, r) => sum + r.uprice, 0) / Math.min(100, historicalData.length)).toFixed(2)}/kg
+- Price Range: ${currency}${Math.min(...historicalData.map(r => r.uprice))}/kg - ${currency}${Math.max(...historicalData.map(r => r.uprice))}/kg
+- LGAs with data: ${[...new Set(historicalData.map(r => r.lga))].join(', ')}
+
+**IMPORTANT**: Use this REAL historical data as the PRIMARY source for your price estimates. Your estimates MUST be based on these actual market prices, not general knowledge.`
+      : '\n\n**Note**: No historical price data found in database for this crop and location. Base estimates on general market knowledge.';
+
     const userPrompt = `Estimate market prices and provide selling strategy for:
     
     Crop Type: ${cropType}
@@ -83,6 +114,7 @@ serve(async (req) => {
     Location: ${location.country}, ${location.state}, ${location.localGovernment}
     Expected Harvest Date: ${harvestDate}
     Currency: ${currency}
+    ${historicalContext}
     
     IMPORTANT: First, verify if "${cropType}" is a valid, real crop. If it's not a real crop or you're unsure about it, return ONLY this structure:
     {
