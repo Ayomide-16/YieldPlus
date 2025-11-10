@@ -86,13 +86,18 @@ const MarketDataUpload = () => {
       return;
     }
 
+    console.log('Starting upload for file:', file.name, 'Size:', file.size);
     setUploading(true);
     setProgress(0);
     setResult(null);
 
     try {
       // Read file
+      console.log('Reading file...');
       const text = await file.text();
+      console.log('File read complete. Length:', text.length);
+      console.log('First 500 chars:', text.substring(0, 500));
+      
       const records = parseCSV(text);
       
       if (records.length === 0) {
