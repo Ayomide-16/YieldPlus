@@ -16,30 +16,60 @@ const MarketDataUpload = () => {
   const [result, setResult] = useState<{ inserted: number; total: number; errors?: string[] } | null>(null);
 
   const parseCSV = (text: string): any[] => {
-    const lines = text.split('\n').filter(line => line.trim());
-    const headers = lines[0].split('\t').map(h => h.trim());
+    // Handle both \n and \r\n line endings
+    const lines = text.split(/\r?\n/).filter(line => line.trim());
+    
+    if (lines.length < 2) {
+      console.error('CSV has less than 2 lines');
+      return [];
+    }
+    
+    console.log(`Total lines: ${lines.length}`);
+    console.log('First line:', lines[0]);
+    console.log('Second line:', lines[1]);
     
     const records = [];
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split('\t');
-      if (values.length < 9) continue; // Skip incomplete rows
-      
-      // Parse date from DD/MM/YYYY to YYYY-MM-DD
-      const dateParts = values[0].split('/');
-      const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
-      
-      records.push({
-        date: formattedDate,
-        state: values[1].trim(),
-        lga: values[2].trim(),
-        outlet_type: values[3].trim(),
-        sector: values[5].trim(),
-        food_item: values[6].trim(),
-        price_category: values[7].trim(),
-        uprice: parseFloat(values[8].trim())
-      });
+      try {
+        const values = lines[i].split('\t');
+        
+        // Skip if not enough columns
+        if (values.length < 9) {
+          console.warn(`Line ${i} has only ${values.length} columns, skipping`);
+          continue;
+        }
+        
+        // Parse date from DD/MM/YYYY to YYYY-MM-DD
+        const dateParts = values[0].trim().split('/');
+        if (dateParts.length !== 3) {
+          console.warn(`Line ${i} has invalid date format: ${values[0]}`);
+          continue;
+        }
+        const formattedDate = `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0].padStart(2, '0')}`;
+        
+        const price = parseFloat(values[8].trim());
+        if (isNaN(price)) {
+          console.warn(`Line ${i} has invalid price: ${values[8]}`);
+          continue;
+        }
+        
+        records.push({
+          date: formattedDate,
+          state: values[1].trim(),
+          lga: values[2].trim(),
+          outlet_type: values[3].trim(),
+          sector: values[5].trim(),
+          food_item: values[6].trim(),
+          price_category: values[7].trim(),
+          uprice: price
+        });
+      } catch (error) {
+        console.error(`Error parsing line ${i}:`, error);
+        continue;
+      }
     }
     
+    console.log(`Successfully parsed ${records.length} records`);
     return records;
   };
 
