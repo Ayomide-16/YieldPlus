@@ -9,8 +9,8 @@ const corsHeaders = {
 
 const MarketPriceSchema = z.object({
   cropType: z.string().min(1).max(50).regex(/^[a-zA-Z\s-]+$/, 'Only letters, spaces and hyphens allowed'),
-  expectedYield: z.number().min(0).optional(),
-  yieldUnit: z.string().max(20).optional(),
+  expectedYield: z.number().min(0).nullable().optional(),
+  yieldUnit: z.string().max(20).nullable().optional(),
   farmSize: z.number().min(0.1).max(10000),
   location: z.object({
     country: z.string().min(1).max(100),
