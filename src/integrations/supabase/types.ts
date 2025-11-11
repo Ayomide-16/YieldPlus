@@ -297,6 +297,57 @@ export type Database = {
           },
         ]
       }
+      data_sync_history: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          dataset_source_url: string | null
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          records_inserted: number | null
+          records_processed: number | null
+          records_skipped: number | null
+          started_at: string
+          status: string
+          sync_type: string
+          triggered_by: string
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          dataset_source_url?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          records_inserted?: number | null
+          records_processed?: number | null
+          records_skipped?: number | null
+          started_at?: string
+          status: string
+          sync_type?: string
+          triggered_by: string
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          dataset_source_url?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          records_inserted?: number | null
+          records_processed?: number | null
+          records_skipped?: number | null
+          started_at?: string
+          status?: string
+          sync_type?: string
+          triggered_by?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       expert_consultations: {
         Row: {
           created_at: string | null

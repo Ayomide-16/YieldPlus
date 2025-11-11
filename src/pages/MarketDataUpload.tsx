@@ -315,13 +315,23 @@ const MarketDataUpload = () => {
                   <li>First row must contain headers</li>
                   <li>All fields required except Country</li>
                 </ul>
-                <Button 
-                  variant="link" 
-                  onClick={generateSampleCSV}
-                  className="p-0 h-auto mt-2 text-primary"
-                >
-                  📥 Download Sample CSV File
-                </Button>
+                <div className="flex gap-2 mt-3">
+                  <Button 
+                    variant="link" 
+                    onClick={generateSampleCSV}
+                    className="p-0 h-auto text-primary"
+                  >
+                    📥 Download Sample CSV File
+                  </Button>
+                  <span className="text-muted-foreground">|</span>
+                  <Button 
+                    variant="link" 
+                    onClick={() => navigate('/admin-dashboard')}
+                    className="p-0 h-auto text-primary"
+                  >
+                    🔧 Admin Dashboard (Auto-sync NBS Data)
+                  </Button>
+                </div>
               </AlertDescription>
             </Alert>
 

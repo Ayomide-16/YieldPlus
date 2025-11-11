@@ -19,6 +19,7 @@ import Resources from "./pages/Resources";
 import MyPlans from "./pages/MyPlans";
 import MyFarms from "./pages/MyFarms";
 import MarketTools from "./pages/MarketTools";
+import AdminDashboard from "./pages/AdminDashboard";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { FarmDataProvider } from "./contexts/FarmDataContext";
@@ -46,6 +47,7 @@ const App = () => (
                     <Route path="/water-optimizer" element={<WaterUsageOptimizer />} />
                     <Route path="/market-estimator" element={<MarketPriceEstimator />} />
                     <Route path="/market-data-upload" element={<MarketDataUpload />} />
+                    <Route path="/admin-dashboard" element={<AdminDashboard />} />
                     <Route path="/comprehensive-plan" element={<ComprehensivePlan />} />
                     <Route path="/pest-identifier" element={<PestIdentifier />} />
                     <Route path="/fertilizer-planner" element={<FertilizerPlanner />} />
