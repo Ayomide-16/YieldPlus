@@ -320,30 +320,129 @@ serve(async (req) => {
     - Include environmental sustainability metrics for each crop recommendation
     - Make all financial projections realistic based on current market prices`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-      }),
-    });
+    // Retry logic with exponential backoff
+    let retryCount = 0;
+    const maxRetries = 3;
+    let response: Response | null = null;
+    let lastError: Error | null = null;
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('AI gateway error:', response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+    while (retryCount < maxRetries) {
+      try {
+        response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+          }),
+        });
+
+        if (response.ok) {
+          break; // Success, exit retry loop
+        }
+
+        // Handle specific error codes
+        if (response.status === 429) {
+          console.warn(`Rate limit hit (attempt ${retryCount + 1}/${maxRetries})`);
+          lastError = new Error('Rate limit exceeded. Please try again later.');
+        } else if (response.status === 402) {
+          console.error('Payment required - insufficient credits');
+          lastError = new Error('Insufficient AI credits. Please add funds to your workspace.');
+          break; // Don't retry payment errors
+        } else {
+          const errorText = await response.text();
+          console.error(`AI gateway error (attempt ${retryCount + 1}/${maxRetries}):`, response.status, errorText);
+          lastError = new Error(`AI service error: ${response.status}`);
+        }
+      } catch (fetchError) {
+        console.error(`Network error (attempt ${retryCount + 1}/${maxRetries}):`, fetchError);
+        lastError = new Error('Network error. Please check your connection.');
+      }
+
+      retryCount++;
+      if (retryCount < maxRetries) {
+        // Exponential backoff: 1s, 2s, 4s
+        const delayMs = Math.pow(2, retryCount - 1) * 1000;
+        console.log(`Retrying in ${delayMs}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      }
+    }
+
+    // If all retries failed, check for cached/previous plan
+    if (!response || !response.ok) {
+      console.error('All retries exhausted, checking for previous plan...');
+      
+      // Try to fetch the most recent successful plan for this farm
+      const { data: previousPlan, error: dbError } = await supabase
+        .from('comprehensive_plans')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!dbError && previousPlan) {
+        console.log('Returning previous plan as fallback');
+        return new Response(JSON.stringify({ 
+          plan: JSON.stringify(previousPlan),
+          fallback: true,
+          message: 'Using previous plan due to temporary service issues'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // No fallback available, return error
+      throw lastError || new Error('Failed to generate plan and no previous plan available');
     }
 
     const data = await response.json();
     const plan = data.choices[0].message.content;
     console.log('Comprehensive plan generated successfully');
+
+    // Parse and save the plan to database
+    try {
+      let parsedPlan = plan;
+      if (typeof plan === 'string') {
+        // Clean markdown code blocks if present
+        parsedPlan = plan.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        parsedPlan = JSON.parse(parsedPlan);
+      }
+
+      // Save to database
+      const { error: saveError } = await supabase
+        .from('comprehensive_plans')
+        .insert({
+          user_id: user.id,
+          farm_id: null, // Farm ID would need to be passed separately
+          plan_name: `${farmData.farm_name} - ${new Date().toLocaleDateString()}`,
+          included_sections: includeSections || {},
+          preferred_planting_date: preferredPlantingDate,
+          climate_data: climateData || {},
+          comprehensive_summary: parsedPlan.executiveSummary || {},
+          optimal_planting_window: parsedPlan.climaticAnalysis?.optimalPlantingWindow || {},
+          crop_analysis: parsedPlan.cropManagement || {},
+          soil_analysis: parsedPlan.soilManagement || {},
+          water_analysis: parsedPlan.waterManagement || {},
+          market_analysis: parsedPlan.marketStrategy || {}
+        });
+
+      if (saveError) {
+        console.error('Failed to save plan to database:', saveError);
+        // Continue anyway - don't fail the request
+      } else {
+        console.log('Plan saved to database successfully');
+      }
+    } catch (parseError) {
+      console.error('Failed to parse or save plan:', parseError);
+      // Continue anyway - return the plan even if save failed
+    }
 
     return new Response(JSON.stringify({ plan }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

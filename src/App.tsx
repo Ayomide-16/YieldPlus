@@ -18,6 +18,7 @@ import FertilizerPlanner from "./pages/FertilizerPlanner";
 import Resources from "./pages/Resources";
 import MyPlans from "./pages/MyPlans";
 import MyFarms from "./pages/MyFarms";
+import MarketTools from "./pages/MarketTools";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { FarmDataProvider } from "./contexts/FarmDataContext";
@@ -51,6 +52,7 @@ const App = () => (
                     <Route path="/resources" element={<Resources />} />
                     <Route path="/my-plans" element={<MyPlans />} />
                     <Route path="/my-farms" element={<MyFarms />} />
+                    <Route path="/market-tools" element={<MarketTools />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>

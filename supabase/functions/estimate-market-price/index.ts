@@ -214,25 +214,60 @@ ${historicalContext}
 
 **Remember**: Provide PREDICTIVE insights based on trend analysis, not just copy-paste of last known prices.`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-      }),
-    });
+    // Retry logic with exponential backoff
+    let retryCount = 0;
+    const maxRetries = 3;
+    let response: Response | null = null;
+    let lastError: Error | null = null;
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('AI gateway error:', response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+    while (retryCount < maxRetries) {
+      try {
+        response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+          }),
+        });
+
+        if (response.ok) {
+          break;
+        }
+
+        if (response.status === 429) {
+          console.warn(`Rate limit hit (attempt ${retryCount + 1}/${maxRetries})`);
+          lastError = new Error('Rate limit exceeded. Please try again later.');
+        } else if (response.status === 402) {
+          console.error('Payment required - insufficient credits');
+          lastError = new Error('Insufficient AI credits. Please add funds to your workspace.');
+          break;
+        } else {
+          const errorText = await response.text();
+          console.error(`AI gateway error (attempt ${retryCount + 1}/${maxRetries}):`, response.status, errorText);
+          lastError = new Error(`AI service error: ${response.status}`);
+        }
+      } catch (fetchError) {
+        console.error(`Network error (attempt ${retryCount + 1}/${maxRetries}):`, fetchError);
+        lastError = new Error('Network error. Please check your connection.');
+      }
+
+      retryCount++;
+      if (retryCount < maxRetries) {
+        const delayMs = Math.pow(2, retryCount - 1) * 1000;
+        console.log(`Retrying in ${delayMs}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      }
+    }
+
+    if (!response || !response.ok) {
+      throw lastError || new Error('Failed to estimate market price after retries');
     }
 
     const data = await response.json();
