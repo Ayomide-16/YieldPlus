@@ -50,12 +50,12 @@ serve(async (req) => {
     const body = await req.json();
     const validatedData = PestIdentificationSchema.parse(body);
     const { cropType, symptoms, location } = validatedData;
-    
+
     console.log('Identifying pest/disease for:', { cropType, symptoms, location, userId: user.id });
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY not configured');
     }
 
     const systemPrompt = `You are an expert agricultural pathologist and entomologist specializing in African crop diseases and pests.
@@ -140,33 +140,33 @@ serve(async (req) => {
     
     Focus on practical, affordable solutions suitable for African farmers. Use locally available materials and cost-effective methods.`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
+        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 8192,
+        },
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('AI gateway error:', response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+      console.error('Gemini API error:', response.status, errorText);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    let analysis = data.choices[0].message.content;
-    
+    let analysis = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response from AI';
+
     // Clean up the response to ensure valid JSON
     analysis = analysis.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    
+
     // Validate JSON
     try {
       JSON.parse(analysis);

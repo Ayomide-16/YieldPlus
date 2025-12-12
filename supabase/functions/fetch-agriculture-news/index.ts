@@ -50,9 +50,9 @@ serve(async (req) => {
     const { location } = validatedData;
     console.log('Fetching news for location:', location, 'userId:', user.id);
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY not configured');
     }
 
     // Generate AI-powered news summaries based on location
@@ -78,30 +78,30 @@ For each article, provide:
 
 Return ONLY a JSON array of 5 articles. Be realistic and specific to the location.`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: 'You are an agricultural news aggregator. Generate realistic, helpful news articles for farmers.' },
-          { role: 'user', content: prompt }
-        ],
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        systemInstruction: { parts: [{ text: 'You are an agricultural news aggregator. Generate realistic, helpful news articles for farmers.' }] },
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 8192,
+        },
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('AI API error:', response.status, errorText);
-      throw new Error(`AI API error: ${response.status}`);
+      console.error('Gemini API error:', response.status, errorText);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
-    
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+
     // Parse the AI response
     let newsArticles;
     try {
@@ -122,9 +122,9 @@ Return ONLY a JSON array of 5 articles. Be realistic and specific to the locatio
       console.error('Database insert error:', insertError);
     }
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      articles: newsArticles 
+    return new Response(JSON.stringify({
+      success: true,
+      articles: newsArticles
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -9,7 +9,7 @@ import LocationSelector from "@/components/LocationSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, Tractor, Save, Plus, Calendar, TrendingUp, Sprout, DollarSign } from "lucide-react";
+import { Loader2, Tractor, Save, Plus, Calendar, TrendingUp, Sprout, DollarSign, Trash2 } from "lucide-react";
 import { UnitSelector, convertToHectares } from "@/components/UnitSelector";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -37,7 +37,7 @@ const ComprehensivePlan = () => {
   const [farms, setFarms] = useState<any[]>([]);
   const [selectedFarm, setSelectedFarm] = useState("");
   const [showNewFarm, setShowNewFarm] = useState(false);
-  
+
   // New farm form
   const [farmName, setFarmName] = useState("");
   const [location, setLocation] = useState({ country: "", state: "", localGovernment: "" });
@@ -47,7 +47,7 @@ const ComprehensivePlan = () => {
   const [waterSource, setWaterSource] = useState("");
   const [irrigationMethod, setIrrigationMethod] = useState("");
   const [cropTypes, setCropTypes] = useState("");
-  
+
   // Plan configuration
   const [plantingMonth, setPlantingMonth] = useState("");
   const [includeSections, setIncludeSections] = useState({
@@ -56,7 +56,7 @@ const ComprehensivePlan = () => {
     water: true,
     market: true,
   });
-  
+
   const [isGenerating, setIsGenerating] = useState(false);
   const [plan, setPlan] = useState<any>(null);
   const [climateData, setClimateData] = useState<any>(null);
@@ -79,7 +79,7 @@ const ComprehensivePlan = () => {
       .from('farms')
       .select('*')
       .order('created_at', { ascending: false });
-    
+
     if (!error && data) {
       setFarms(data);
     }
@@ -102,26 +102,25 @@ const ComprehensivePlan = () => {
     });
 
     if (!validation.success) {
-      toast({ 
-        title: "Validation Error", 
-        description: validation.error.errors[0].message, 
-        variant: "destructive" 
+      toast({
+        title: "Validation Error",
+        description: validation.error.errors[0].message,
+        variant: "destructive"
       });
       return;
     }
 
     // Convert farm size to hectares for storage
     const sizeInHectares = convertToHectares(parseFloat(validation.data.farmSize), farmUnit);
-    
+
     const { data, error } = await supabase
       .from('farms')
       .insert({
-        farm_name: validation.data.farmName,
+        name: validation.data.farmName,
         location: location,
-        total_size: sizeInHectares,
+        size: sizeInHectares,
+        size_unit: 'hectares',
         soil_type: validation.data.soilType,
-        water_source: validation.data.waterSource,
-        irrigation_method: validation.data.irrigationMethod,
         crops: validation.data.cropTypes ? validation.data.cropTypes.split(',').map(c => c.trim()) : [],
         user_id: user?.id
       })
@@ -137,6 +136,24 @@ const ComprehensivePlan = () => {
     setSelectedFarm(data.id);
     setShowNewFarm(false);
     toast({ title: t("common.success"), description: t("farmPlanner.farmCreated") });
+  };
+
+  const handleDeleteFarm = async (farmId: string) => {
+    const { error } = await supabase
+      .from('farms')
+      .delete()
+      .eq('id', farmId);
+
+    if (error) {
+      toast({ title: t("common.error"), description: "Failed to delete farm", variant: "destructive" });
+      return;
+    }
+
+    setFarms(farms.filter(f => f.id !== farmId));
+    if (selectedFarm === farmId) {
+      setSelectedFarm("");
+    }
+    toast({ title: t("common.success"), description: "Farm deleted successfully" });
   };
 
   const handleGeneratePlan = async () => {
@@ -160,7 +177,7 @@ const ComprehensivePlan = () => {
       const currentYear = new Date().getFullYear();
       const monthIndex = months.indexOf(plantingMonth);
       const derivedPlantingDate = new Date(currentYear, monthIndex, 15).toISOString().split('T')[0];
-      
+
       // Step 1: Get climate data
       if (import.meta.env.DEV) {
         console.log('Fetching climate data...');
@@ -220,10 +237,10 @@ const ComprehensivePlan = () => {
           console.error('Error parsing plan:', e);
         }
         // If JSON parsing fails, create a basic structure with the raw response
-        parsedPlan = { 
-          executiveSummary: { 
-            overview: typeof planResponse.plan === 'string' ? planResponse.plan : 'Plan generated successfully. Details below.' 
-          } 
+        parsedPlan = {
+          executiveSummary: {
+            overview: typeof planResponse.plan === 'string' ? planResponse.plan : 'Plan generated successfully. Details below.'
+          }
         };
       }
 
@@ -252,10 +269,10 @@ const ComprehensivePlan = () => {
       if (error.message) {
         errorMessage = error.message;
       }
-      toast({ 
-        title: t("common.error"), 
-        description: errorMessage, 
-        variant: "destructive" 
+      toast({
+        title: t("common.error"),
+        description: errorMessage,
+        variant: "destructive"
       });
     } finally {
       setIsGenerating(false);
@@ -298,21 +315,56 @@ const ComprehensivePlan = () => {
                 <CardDescription>{t('farmPlanner.selectFarmDesc')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>{t("farmPlanner.selectFarmLabel")}</Label>
-                  <Select value={selectedFarm} onValueChange={setSelectedFarm}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("farmPlanner.chooseAFarm")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {farms.map(farm => (
-                        <SelectItem key={farm.id} value={farm.id}>
-                          {farm.farm_name} - {farm.total_size} {t("farmPlanner.hectares")}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {farms.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Tractor className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No farms yet. Create your first farm to get started.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <Label>{t("farmPlanner.selectFarmLabel")}</Label>
+                    {farms.map(farm => (
+                      <div
+                        key={farm.id}
+                        className={`p-4 rounded-lg border cursor-pointer transition-all ${selectedFarm === farm.id
+                            ? 'border-primary bg-primary/5 shadow-md'
+                            : 'border-border hover:border-primary/50 hover:bg-accent/50'
+                          }`}
+                        onClick={() => setSelectedFarm(farm.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <Sprout className={`h-5 w-5 ${selectedFarm === farm.id ? 'text-primary' : 'text-muted-foreground'}`} />
+                              <h3 className="font-semibold">{farm.name}</h3>
+                              {selectedFarm === farm.id && (
+                                <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+                                  Selected
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
+                              <span>{farm.size} {farm.size_unit || 'hectares'}</span>
+                              {farm.soil_type && <span>• {farm.soil_type} soil</span>}
+                              {farm.crops?.length > 0 && <span>• {farm.crops.join(', ')}</span>}
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteFarm(farm.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <Button variant="outline" onClick={() => setShowNewFarm(true)} className="w-full">
                   <Plus className="mr-2 h-4 w-4" /> {t('farmPlanner.createNewFarm')}
                 </Button>
@@ -428,7 +480,7 @@ const ComprehensivePlan = () => {
                       <Checkbox
                         id="crop"
                         checked={includeSections.crop}
-                        onCheckedChange={(checked) => setIncludeSections({...includeSections, crop: !!checked})}
+                        onCheckedChange={(checked) => setIncludeSections({ ...includeSections, crop: !!checked })}
                       />
                       <Label htmlFor="crop" className="cursor-pointer">{t('farmPlanner.cropPlanning')}</Label>
                     </div>
@@ -436,7 +488,7 @@ const ComprehensivePlan = () => {
                       <Checkbox
                         id="soil"
                         checked={includeSections.soil}
-                        onCheckedChange={(checked) => setIncludeSections({...includeSections, soil: !!checked})}
+                        onCheckedChange={(checked) => setIncludeSections({ ...includeSections, soil: !!checked })}
                       />
                       <Label htmlFor="soil" className="cursor-pointer">{t('farmPlanner.soilAnalysis')}</Label>
                     </div>
@@ -444,7 +496,7 @@ const ComprehensivePlan = () => {
                       <Checkbox
                         id="water"
                         checked={includeSections.water}
-                        onCheckedChange={(checked) => setIncludeSections({...includeSections, water: !!checked})}
+                        onCheckedChange={(checked) => setIncludeSections({ ...includeSections, water: !!checked })}
                       />
                       <Label htmlFor="water" className="cursor-pointer">{t('farmPlanner.waterManagement')}</Label>
                     </div>
@@ -452,7 +504,7 @@ const ComprehensivePlan = () => {
                       <Checkbox
                         id="market"
                         checked={includeSections.market}
-                        onCheckedChange={(checked) => setIncludeSections({...includeSections, market: !!checked})}
+                        onCheckedChange={(checked) => setIncludeSections({ ...includeSections, market: !!checked })}
                       />
                       <Label htmlFor="market" className="cursor-pointer">{t('farmPlanner.marketPrices')}</Label>
                     </div>
@@ -536,7 +588,7 @@ const ComprehensivePlan = () => {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <p className="text-muted-foreground">{plan.climaticAnalysis.currentConditions}</p>
-                    
+
                     {plan.climaticAnalysis.optimalPlantingWindow && (
                       <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
                         <h4 className="font-semibold mb-2 flex items-center gap-2">
@@ -766,10 +818,9 @@ const ComprehensivePlan = () => {
                           <div key={idx} className="p-4 rounded-lg bg-destructive/5 border border-destructive/20">
                             <div className="flex items-start justify-between mb-2">
                               <h4 className="font-semibold">{threat.threat}</h4>
-                              <span className={`text-xs px-2 py-1 rounded ${
-                                threat.risk === 'high' ? 'bg-destructive text-destructive-foreground' : 
+                              <span className={`text-xs px-2 py-1 rounded ${threat.risk === 'high' ? 'bg-destructive text-destructive-foreground' :
                                 threat.risk === 'medium' ? 'bg-secondary' : 'bg-muted'
-                              }`}>
+                                }`}>
                                 {threat.risk} Risk
                               </span>
                             </div>
@@ -849,14 +900,12 @@ const ComprehensivePlan = () => {
                             <div className="flex items-start justify-between mb-2">
                               <h4 className="font-semibold">{risk.risk}</h4>
                               <div className="flex gap-2">
-                                <span className={`text-xs px-2 py-1 rounded ${
-                                  risk.probability === 'high' ? 'bg-destructive/20' : 'bg-muted'
-                                }`}>
+                                <span className={`text-xs px-2 py-1 rounded ${risk.probability === 'high' ? 'bg-destructive/20' : 'bg-muted'
+                                  }`}>
                                   {risk.probability} probability
                                 </span>
-                                <span className={`text-xs px-2 py-1 rounded ${
-                                  risk.impact === 'high' ? 'bg-destructive text-destructive-foreground' : 'bg-muted'
-                                }`}>
+                                <span className={`text-xs px-2 py-1 rounded ${risk.impact === 'high' ? 'bg-destructive text-destructive-foreground' : 'bg-muted'
+                                  }`}>
                                   {risk.impact} impact
                                 </span>
                               </div>
@@ -918,7 +967,7 @@ const ComprehensivePlan = () => {
               {plan.resources && Array.isArray(plan.resources) && plan.resources.length > 0 && (
                 <DataSources sources={plan.resources} />
               )}
-              
+
               {plan.climaticAnalysis?.dataSources && (
                 <DataSources sources={plan.climaticAnalysis.dataSources} />
               )}

@@ -59,12 +59,12 @@ serve(async (req) => {
     const body = await req.json();
     const validatedData = ComprehensivePlanSchema.parse(body);
     const { farmData, preferredPlantingDate, climateData, includeSections } = validatedData;
-    
+
     console.log('Generating comprehensive farm plan for:', farmData.farm_name, 'userId:', user.id);
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY not configured');
     }
 
     const systemPrompt = `You are an expert agricultural consultant providing comprehensive farm planning with a focus on profitability and sustainability.
@@ -328,18 +328,18 @@ serve(async (req) => {
 
     while (retryCount < maxRetries) {
       try {
-        response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userPrompt }
-            ],
+            contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 8192,
+            },
           }),
         });
 
@@ -351,13 +351,9 @@ serve(async (req) => {
         if (response.status === 429) {
           console.warn(`Rate limit hit (attempt ${retryCount + 1}/${maxRetries})`);
           lastError = new Error('Rate limit exceeded. Please try again later.');
-        } else if (response.status === 402) {
-          console.error('Payment required - insufficient credits');
-          lastError = new Error('Insufficient AI credits. Please add funds to your workspace.');
-          break; // Don't retry payment errors
         } else {
           const errorText = await response.text();
-          console.error(`AI gateway error (attempt ${retryCount + 1}/${maxRetries}):`, response.status, errorText);
+          console.error(`Gemini API error (attempt ${retryCount + 1}/${maxRetries}):`, response.status, errorText);
           lastError = new Error(`AI service error: ${response.status}`);
         }
       } catch (fetchError) {
@@ -377,7 +373,7 @@ serve(async (req) => {
     // If all retries failed, check for cached/previous plan
     if (!response || !response.ok) {
       console.error('All retries exhausted, checking for previous plan...');
-      
+
       // Try to fetch the most recent successful plan for this farm
       const { data: previousPlan, error: dbError } = await supabase
         .from('comprehensive_plans')
@@ -389,7 +385,7 @@ serve(async (req) => {
 
       if (!dbError && previousPlan) {
         console.log('Returning previous plan as fallback');
-        return new Response(JSON.stringify({ 
+        return new Response(JSON.stringify({
           plan: JSON.stringify(previousPlan),
           fallback: true,
           message: 'Using previous plan due to temporary service issues'

@@ -49,134 +49,133 @@ serve(async (req) => {
     const body = await req.json();
     const validatedData = SoilAnalysisSchema.parse(body);
     const { color, texture, notes, imageBase64, soilPH, soilCompactness } = validatedData;
-    
+
     console.log('Analyzing soil conditions with pH and compactness data for user:', user.id);
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY not configured');
     }
 
     const systemPrompt = `You are an expert soil scientist and agricultural consultant with access to data from FAO, CGIAR, USDA, and agricultural research institutions. Analyze soil conditions and provide comprehensive, data-rich recommendations in JSON format with extensive nutrient analysis, charts data, and climate-based recommendations. Always cite reputable sources.`;
 
-    const messages: any[] = [
-      { role: 'system', content: systemPrompt }
-    ];
+    let userPrompt: string;
+    let contents: any[];
 
     if (imageBase64) {
-      // If image is provided, use vision model
-      messages.push({
+      // If image is provided, use vision model with inline image
+      userPrompt = `Analyze this soil image along with the following characteristics:
+            
+Soil Color: ${color}
+Soil Texture: ${texture}
+${soilPH ? `Soil pH Indicator (Taste): ${soilPH}` : ''}
+${soilCompactness ? `Soil Compactness: ${soilCompactness}` : ''}
+Additional Notes: ${notes || 'None'}
+
+Provide comprehensive analysis in JSON format with these exact keys:
+{
+  "summary": "Brief overview",
+  "healthAssessment": {"overallHealth": "Good/Fair/Poor", "pHLevel": "6.5-7.0", "organicMatter": "High", "drainageQuality": "Excellent", "soilStructure": "Well-structured", "healthScore": 85},
+  "nutrientStatus": {"nitrogen": "Adequate", "phosphorus": "High", "potassium": "Adequate", "calcium": "Adequate", "magnesium": "Low", "sulfur": "Adequate"},
+  "nutrientChart": [{"nutrient": "Nitrogen", "current": 85, "optimal": 90, "status": "Good"}, {"nutrient": "Phosphorus", "current": 95, "optimal": 85, "status": "High"}],
+  "amendments": [{"name": "Amendment", "purpose": "Purpose", "application": "Method", "quantity": "Amount", "cost": "Estimate", "priority": "High"}],
+  "cropRotation": "Detailed rotation strategy",
+  "timeline": [{"period": "Month 1-2", "action": "Action", "expectedImprovement": "Improvement"}],
+  "micronutrients": {"iron": "Adequate", "zinc": "Low", "manganese": "Adequate", "boron": "Adequate"},
+  "irrigationRecommendations": "Water management advice",
+  "climateRecommendations": ["Climate-based recommendation with timing and specific actions"],
+  "expectedImprovementTimeline": [{"month": 1, "healthScore": 65}, {"month": 3, "healthScore": 75}, {"month": 6, "healthScore": 85}, {"month": 12, "healthScore": 90}],
+  "dataSources": [
+    {"name": "FAO", "url": "http://www.fao.org/"},
+    {"name": "CGIAR", "url": "https://www.cgiar.org/"},
+    {"name": "USDA", "url": "https://www.usda.gov/"}
+  ]
+}
+
+Provide detailed data for charts including all major and micronutrients, and include reputable source citations.`;
+
+      // Extract base64 data if it includes data URL prefix
+      const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+
+      contents = [{
         role: 'user',
-        content: [
-          {
-            type: 'text',
-            text: `Analyze this soil image along with the following characteristics:
-            
-            Soil Color: ${color}
-            Soil Texture: ${texture}
-            ${soilPH ? `Soil pH Indicator (Taste): ${soilPH}` : ''}
-            ${soilCompactness ? `Soil Compactness: ${soilCompactness}` : ''}
-            Additional Notes: ${notes || 'None'}
-            
-            Provide comprehensive analysis in JSON format with these exact keys:
-            {
-              "summary": "Brief overview",
-              "healthAssessment": {"overallHealth": "Good/Fair/Poor", "pHLevel": "6.5-7.0", "organicMatter": "High", "drainageQuality": "Excellent", "soilStructure": "Well-structured", "healthScore": 85},
-              "nutrientStatus": {"nitrogen": "Adequate", "phosphorus": "High", "potassium": "Adequate", "calcium": "Adequate", "magnesium": "Low", "sulfur": "Adequate"},
-              "nutrientChart": [{"nutrient": "Nitrogen", "current": 85, "optimal": 90, "status": "Good"}, {"nutrient": "Phosphorus", "current": 95, "optimal": 85, "status": "High"}],
-              "amendments": [{"name": "Amendment", "purpose": "Purpose", "application": "Method", "quantity": "Amount", "cost": "Estimate", "priority": "High"}],
-              "cropRotation": "Detailed rotation strategy",
-              "timeline": [{"period": "Month 1-2", "action": "Action", "expectedImprovement": "Improvement"}],
-              "micronutrients": {"iron": "Adequate", "zinc": "Low", "manganese": "Adequate", "boron": "Adequate"},
-              "irrigationRecommendations": "Water management advice",
-              "climateRecommendations": ["Climate-based recommendation with timing and specific actions"],
-              "expectedImprovementTimeline": [{"month": 1, "healthScore": 65}, {"month": 3, "healthScore": 75}, {"month": 6, "healthScore": 85}, {"month": 12, "healthScore": 90}],
-              "dataSources": [
-                {"name": "FAO", "url": "http://www.fao.org/"},
-                {"name": "CGIAR", "url": "https://www.cgiar.org/"},
-                {"name": "USDA", "url": "https://www.usda.gov/"}
-              ]
-            }
-            
-            Provide detailed data for charts including all major and micronutrients, and include reputable source citations.`
-          },
-          {
-            type: 'image_url',
-            image_url: {
-              url: imageBase64
-            }
-          }
+        parts: [
+          { text: userPrompt },
+          { inlineData: { mimeType: 'image/jpeg', data: base64Data } }
         ]
-      });
+      }];
     } else {
       // Text-only analysis
-      messages.push({
-        role: 'user',
-        content: `Analyze the following soil characteristics and provide detailed recommendations:
+      userPrompt = `Analyze the following soil characteristics and provide detailed recommendations:
         
-        Soil Color: ${color}
-        Soil Texture: ${texture}
-        ${soilPH ? `Soil pH Indicator (Taste): ${soilPH}` : ''}
-        ${soilCompactness ? `Soil Compactness: ${soilCompactness}` : ''}
-        Additional Notes: ${notes || 'None'}
-        
-        Provide analysis in JSON format with these exact keys:
-        {
-          "healthScore": 35,
-          "soilColor": "${color}",
-          "soilTexture": "${texture}",
-          "moistureLevel": "Estimated level",
-          "naturalAmendments": [
-            {
-              "title": "Amendment Title",
-              "description": "Detailed description",
-              "priority": "high"
-            }
-          ],
-          "cropRotation": [
-            {
-              "suggestion": "Rotation recommendation",
-              "benefits": "Benefits explanation"
-            }
-          ],
-          "irrigationRecommendations": [
-            {
-              "title": "Irrigation Title",
-              "description": "Detailed recommendation"
-            }
-          ],
-          "climateRecommendations": ["Climate-based recommendation with timing"],
-          "additionalNotes": "Important notes and concerns",
-          "dataSources": [
-            {"name": "FAO", "url": "http://www.fao.org/"},
-            {"name": "CGIAR", "url": "https://www.cgiar.org/"}
-          ]
-        }
-        
-        Provide at least 3 items for each array field and cite reputable agricultural sources.`
-      });
+Soil Color: ${color}
+Soil Texture: ${texture}
+${soilPH ? `Soil pH Indicator (Taste): ${soilPH}` : ''}
+${soilCompactness ? `Soil Compactness: ${soilCompactness}` : ''}
+Additional Notes: ${notes || 'None'}
+
+Provide analysis in JSON format with these exact keys:
+{
+  "healthScore": 35,
+  "soilColor": "${color}",
+  "soilTexture": "${texture}",
+  "moistureLevel": "Estimated level",
+  "naturalAmendments": [
+    {
+      "title": "Amendment Title",
+      "description": "Detailed description",
+      "priority": "high"
+    }
+  ],
+  "cropRotation": [
+    {
+      "suggestion": "Rotation recommendation",
+      "benefits": "Benefits explanation"
+    }
+  ],
+  "irrigationRecommendations": [
+    {
+      "title": "Irrigation Title",
+      "description": "Detailed recommendation"
+    }
+  ],
+  "climateRecommendations": ["Climate-based recommendation with timing"],
+  "additionalNotes": "Important notes and concerns",
+  "dataSources": [
+    {"name": "FAO", "url": "http://www.fao.org/"},
+    {"name": "CGIAR", "url": "https://www.cgiar.org/"}
+  ]
+}
+
+Provide at least 3 items for each array field and cite reputable agricultural sources.`;
+
+      contents = [{ role: 'user', parts: [{ text: userPrompt }] }];
     }
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const model = imageBase64 ? 'gemini-2.0-flash' : 'gemini-2.0-flash';
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: imageBase64 ? 'google/gemini-2.5-pro' : 'google/gemini-2.5-flash',
-        messages
+        contents,
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 8192,
+        },
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('AI gateway error:', response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+      console.error('Gemini API error:', response.status, errorText);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const analysis = data.choices[0].message.content;
+    const analysis = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response from AI';
     console.log('Soil analysis completed successfully');
 
     return new Response(JSON.stringify({ analysis }), {

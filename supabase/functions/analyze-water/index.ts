@@ -51,12 +51,12 @@ serve(async (req) => {
     const body = await req.json();
     const validatedData = WaterAnalysisSchema.parse(body);
     const { waterSource, farmSize, cropTypes, irrigationMethod, location } = validatedData;
-    
+
     console.log('Analyzing water usage for:', { waterSource, farmSize, cropTypes, irrigationMethod, location, userId: user.id });
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY not configured');
     }
 
     // Determine local currency based on location
@@ -113,29 +113,29 @@ serve(async (req) => {
     
     Provide data for all 12 months in monthlyProjection for charts. Include specific rain predictions and irrigation recommendations based on weather forecasts. Cite reputable sources.`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
+        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 8192,
+        },
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('AI gateway error:', response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+      console.error('Gemini API error:', response.status, errorText);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const analysis = data.choices[0].message.content;
+    const analysis = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response from AI';
     console.log('Water analysis completed successfully');
 
     return new Response(JSON.stringify({ analysis }), {
