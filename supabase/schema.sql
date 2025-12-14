@@ -192,3 +192,4 @@ create trigger on_auth_user_created
 -- SUCCESS MESSAGE
 -- ================================================
 select 'YieldPlus database schema created successfully!' as status;
+   
