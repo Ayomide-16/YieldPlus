@@ -399,7 +399,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const plan = data.choices[0].message.content;
+    const plan = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response from AI';
     console.log('Comprehensive plan generated successfully');
 
     // Parse and save the plan to database
