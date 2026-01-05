@@ -1,0 +1,998 @@
+================================================================================
+                    YIELDPLUS.AI - COMPREHENSIVE CODEBASE ANALYSIS
+================================================================================
+
+PROJECT OVERVIEW
+================================================================================
+YieldPlus.AI is an AI-powered smart farming platform designed for African 
+agriculture. It provides farmers with data-driven insights for crop planning, 
+soil analysis, water management, pest identification, fertilizer optimization, 
+and market price estimation.
+
+TECHNOLOGY STACK:
+- Frontend: React 18 + TypeScript + Vite
+- Styling: TailwindCSS + shadcn/ui components
+- State Management: React Query (TanStack Query)
+- Routing: React Router DOM v6
+- Forms: React Hook Form + Zod validation
+- Charts: Recharts
+- Animations: Framer Motion
+- Internationalization: i18next (multi-language support)
+- Backend: Supabase (PostgreSQL + Edge Functions)
+- AI: Google Gemini 2.0 Flash API
+
+
+================================================================================
+                              UI/PAGES ANALYSIS
+================================================================================
+
+1. INDEX PAGE (Landing Page) - /
+--------------------------------------------------------------------------------
+Location: src/pages/Index.tsx
+
+SECTIONS:
+- Hero Section: Full-screen animated hero with gradient background, floating 
+  orbs using Framer Motion, headline "Farm Smarter, Not Harder", and CTA 
+  buttons ("Start Free" / "Go to Dashboard" based on auth state)
+  
+- Stats Bar: Displays 10K+ farmers, 50K+ hectares, 35% yield increase, 15+ 
+  countries
+
+- Features Section: 4 rotating feature cards (AI-Powered Insights, Precision 
+  Planning, Market Intelligence, Risk Protection) with auto-cycling every 4 
+  seconds and interactive progress indicators
+
+- Tools Section: 6 tool cards linking to:
+  • Farm Planner (/comprehensive-plan)
+  • Crop Advisor (/crop-planner)
+  • Soil Analysis (/soil-advisor)
+  • Water Management (/water-optimizer)
+  • Market Prices (/market-estimator)
+  • Pest Detection (/pest-identifier)
+
+- CTA Section: Final call-to-action with "Get Started — It's Free" button
+
+- Footer: Logo, navigation links, copyright
+
+LOGIC: Uses useAuth() hook to check authentication state. If user is logged 
+in, CTA buttons redirect to /comprehensive-plan; otherwise, to /auth.
+
+
+2. AUTH PAGE - /auth
+--------------------------------------------------------------------------------
+Location: src/pages/Auth.tsx
+
+UI ELEMENTS:
+- Centered card with Sprout logo
+- Tab navigation: Sign In | Sign Up
+- Sign In form: Email + Password fields
+- Sign Up form: Full Name + Email + Password fields
+- Loading states with disabled buttons during submission
+
+LOGIC:
+- Uses Zod schema for validation (email format, 6+ char password, 2+ char name)
+- Calls supabase.auth.signUp() or supabase.auth.signInWithPassword()
+- On successful auth, redirects to "/" via onAuthStateChange listener
+- Error handling with toast notifications
+- Email verification redirect configured with emailRedirectTo
+
+
+3. COMPREHENSIVE PLAN PAGE - /comprehensive-plan
+--------------------------------------------------------------------------------
+Location: src/pages/ComprehensivePlan.tsx (Main Dashboard/Farm Planner)
+
+UI SECTIONS:
+- Farm Selection: List of saved farms with select/delete functionality
+- Create New Farm Form:
+  • Farm Name (text input)
+  • LocationSelector component (Country/State/LGA dropdowns)
+  • Farm Size + Unit selector
+  • Soil Type dropdown (Clay/Sandy/Loamy/Silt)
+  • Water Source dropdown (Well/River/Rainwater/Municipal)
+  • Irrigation Method dropdown (Drip/Sprinkler/Flood/Manual)
+  • Crop Types (comma-separated input)
+
+- Plan Configuration:
+  • Planting Month selector (12 months)
+  • Include Sections checkboxes:
+    - Crop Planning
+    - Soil Analysis
+    - Water Management
+    - Market Prices
+
+- Results Display (when generated):
+  • Executive Summary with key recommendations and expected outcomes
+  • Climate Analysis with optimal planting window
+  • Crop Management recommendations with charts (Bar, Line, Pie)
+  • Soil Management amendments
+  • Water Management irrigation schedules
+  • Financial Projections (startup costs, ROI, break-even)
+  • Print functionality
+
+LOGIC FLOW:
+1. User selects or creates a farm
+2. Farm data validated with Zod schema and saved to 'farms' table
+3. Selects planting month and sections to include
+4. Clicks "Generate Plan" → Calls get-climate-data function first
+5. Then calls generate-comprehensive-plan with farm + climate data
+6. Parsed response displayed in structured cards
+7. Plan saved to 'comprehensive_plans' table
+
+
+4. CROP PLANNER PAGE - /crop-planner
+--------------------------------------------------------------------------------
+Location: src/pages/CropPlanner.tsx
+
+UI ELEMENTS:
+- LocationSelector (Country/State/LGA)
+- Soil Type dropdown
+- Farm Size + Unit inputs
+- Crop Type text input
+- "Generate Plan" button
+
+RESULTS DISPLAY:
+- Recommended Crops cards with suitability scores
+- Planting Schedule timeline
+- Yield Potential Analysis with:
+  • Bar chart (Suitability, Market Demand, Profit Potential)
+  • Radar chart (top 3 crops comparison)
+- Monthly Climate Analysis (Line chart: rainfall vs temperature)
+- Recommendations with priority/timeframe/cost
+- Pest Risk Analysis cards
+- Climate Analysis text
+- Climate Recommendations
+- Data Sources links
+- Tool Suggestions for related tools
+
+BUTTONS:
+- Print Crop Planning Report
+- Save Plan (SavePlanButton component)
+- New Plan
+
+
+5. SOIL NUTRIENT ADVISOR PAGE - /soil-advisor
+--------------------------------------------------------------------------------
+Location: src/pages/SoilNutrientAdvisor.tsx
+
+UI ELEMENTS:
+- Soil Image Upload (optional, base64 encoded, 5MB max)
+- Soil Color dropdown (Dark Brown/Brown/Red/Yellow/Gray)
+- Soil Texture dropdown (Sticky-Clay/Gritty-Sandy/Smooth-Loamy/Silky-Silt)
+- Farm Size + Unit (optional)
+- Soil pH indicator dropdown (Bitter-Alkaline/Sour-Acidic/Tasteless-Neutral)
+- Soil Compactness dropdown (Loose/Compact)
+- Additional Notes textarea
+
+RESULTS DISPLAY:
+- Summary text
+- Health Assessment with Radial Bar Chart (Health Score %)
+- Nutrient Analysis Bar Chart (Current vs Optimal levels)
+- Improvement Projection Line Chart (health score over 12 months)
+- Recommended Amendments list
+- Implementation Timeline phases
+- Climate Recommendations
+- Data Sources
+
+SPECIAL FEATURES:
+- Image compression utility (compressImage from lib/imageUtils)
+- Vision model integration for image-based soil analysis
+
+
+6. WATER USAGE OPTIMIZER PAGE - /water-optimizer
+--------------------------------------------------------------------------------
+Location: src/pages/WaterUsageOptimizer.tsx
+
+UI ELEMENTS:
+- LocationSelector
+- Water Source dropdown (Well/River/Rainwater/Municipal/Borehole)
+- Farm Size + Unit
+- Crop Types (comma-separated)
+- Irrigation Method dropdown (Flood/Drip/Sprinkler/Manual)
+
+RESULTS DISPLAY:
+- Summary
+- Current Water Usage metrics
+- Optimization Strategies cards
+- Irrigation Schedule (IrrigationSchedule component)
+- Water Savings Projection Line Chart
+- Rain Predictions (RainPrediction component)
+- Climate-Based Irrigation Schedule
+- Additional Recommendations
+- Data Sources
+
+
+7. MARKET PRICE ESTIMATOR PAGE - /market-estimator
+--------------------------------------------------------------------------------
+Location: src/pages/MarketPriceEstimator.tsx
+
+UI ELEMENTS:
+- LocationSelector
+- Crop Type text input
+- Farm Size + Unit
+- Expected Yield (optional) + Yield Unit (Mudus/Kg/Tons/Bags)
+- Expected Harvest Date (date picker)
+
+RESULTS DISPLAY:
+- Market Summary
+- Price Estimate (Low/Average/High prices, Total Revenue)
+- Market Trends cards
+- Selling Strategy
+- Historical Price Trends (Area Chart)
+- Risk Factors
+- Seasonal Climate Impact
+- Data Sources
+
+SPECIAL FEATURE: Queries historical market_prices table from database
+
+
+8. PEST IDENTIFIER PAGE - /pest-identifier
+--------------------------------------------------------------------------------
+Location: src/pages/PestIdentifier.tsx
+
+UI ELEMENTS:
+- Crop Type dropdown (Maize/Rice/Cassava/Tomato/Beans/Sorghum/Millet/Yam/
+  Cocoa/Coffee)
+- LocationSelector
+- Observed Symptoms checkboxes (13 common symptoms)
+- Custom Symptom input with Add button
+- Selected Symptoms badges (removable)
+- Plant Image upload (optional)
+- "Identify Pest/Disease" button
+
+RESULTS DISPLAY:
+- Diagnosis card with:
+  • Primary diagnosis (name, scientific name, confidence level, description)
+  • Causes (primary + contributing factors)
+- Treatment Options:
+  • Immediate Actions with materials, cost, effectiveness
+  • Organic Solutions
+  • Chemical Treatments with dosage and safety warnings
+- Prevention Measures
+- Pest/Disease Lifecycle info
+- Economic Impact analysis
+- Expert Consultation advice
+- Data Sources
+
+SPECIAL: Saves diagnosis to 'pest_disease_reports' table
+
+
+9. FERTILIZER PLANNER PAGE - /fertilizer-planner
+--------------------------------------------------------------------------------
+Location: src/pages/FertilizerPlanner.tsx
+
+UI ELEMENTS:
+- Crop Type dropdown
+- Farm Size + Unit
+- Planting Month dropdown
+- LocationSelector
+- Optional Soil Analysis section:
+  • Soil pH
+  • Nitrogen (ppm)
+  • Phosphorus (ppm)
+  • Potassium (ppm)
+  • Organic Matter (%)
+
+RESULTS DISPLAY:
+- Nutrient Requirements (N-P-K values)
+- Application Schedule:
+  • Basal Application with fertilizers, quantities, costs
+  • Top Dressing schedule by crop stage
+- Cost Analysis:
+  • Inorganic Fertilizers cost
+  • Organic Fertilizers cost
+  • Hybrid Approach (recommended)
+- Organic Alternatives (Compost, Animal Manure)
+- Yield Projection comparison
+- Data Sources
+
+
+10. RESOURCES PAGE - /resources
+--------------------------------------------------------------------------------
+Location: src/pages/Resources.tsx
+
+Contains agricultural learning resources, guides, videos, and external links.
+(Large file - 36KB - contains comprehensive resource library)
+
+
+11. MY PLANS PAGE - /my-plans
+--------------------------------------------------------------------------------
+Location: src/pages/MyPlans.tsx
+
+UI ELEMENTS:
+- List of saved plans from 'saved_plans' table
+- Cards showing plan type, name, location, creation date
+- Delete functionality
+- Link to view/regenerate each plan
+
+LOGIC: Queries saved_plans table filtered by user_id
+
+
+12. MY FARMS PAGE - /my-farms
+--------------------------------------------------------------------------------
+Location: src/pages/MyFarms.tsx
+
+UI ELEMENTS:
+- List of saved farms from 'farms' table
+- Farm cards showing name, size, soil type, crops
+- Edit/Delete functionality
+- "Add New Farm" button
+
+LOGIC: CRUD operations on farms table
+
+
+13. MARKET TOOLS PAGE - /market-tools
+--------------------------------------------------------------------------------
+Location: src/pages/MarketTools.tsx
+
+Small page linking to market-related tools.
+
+
+14. ADMIN DASHBOARD PAGE - /admin-dashboard
+--------------------------------------------------------------------------------
+Location: src/pages/AdminDashboard.tsx
+
+Administrative interface for data management (11KB file).
+
+
+15. MARKET DATA UPLOAD PAGE - /market-data-upload
+--------------------------------------------------------------------------------
+Location: src/pages/MarketDataUpload.tsx
+
+Interface for uploading bulk market price data (15KB file).
+
+
+16. NOT FOUND PAGE - /*
+--------------------------------------------------------------------------------
+Location: src/pages/NotFound.tsx
+
+Simple 404 error page with navigation back to home.
+
+
+================================================================================
+                            COMPONENTS ANALYSIS
+================================================================================
+
+NAVIGATION COMPONENTS:
+----------------------
+- Navigation.tsx: Top navigation bar with mobile responsiveness
+- AppSidebar.tsx: Main sidebar with:
+  • Logo (YieldPlus.ai with Sprout icon)
+  • Navigation items with icons and colors
+  • User profile section (when authenticated)
+  • My Plans / My Farms links
+  • Sign Out button
+  • Collapsible mode support
+  • Animated hover effects
+
+REUSABLE COMPONENTS:
+-------------------
+- LocationSelector.tsx: Hierarchical Country → State → LGA dropdowns
+- UnitSelector.tsx: Farm size unit selector with conversion utilities
+- PageHeader.tsx: Consistent page header with gradient styling
+- SavePlanButton.tsx: Save analysis results to database
+- ToolSuggestions.tsx: Suggests related tools based on current analysis
+- DataSources.tsx: Displays citation links to data sources
+- ClimateRecommendations.tsx: Shows climate-based recommendations
+- IrrigationSchedule.tsx: Displays irrigation schedule table
+- RainPrediction.tsx: Rain forecast display
+- ProtectedRoute.tsx: Route wrapper requiring authentication
+- ErrorBoundary.tsx: React error boundary for graceful error handling
+
+UI COMPONENTS (55 shadcn/ui components):
+---------------------------------------
+Located in src/components/ui/
+Includes: button, card, input, select, tabs, sidebar, toast, dialog, 
+checkbox, badge, alert, separator, tooltip, accordion, carousel, chart, 
+drawer, dropdown-menu, etc.
+
+
+================================================================================
+                           BACKEND ANALYSIS
+================================================================================
+
+SUPABASE CONFIGURATION:
+----------------------
+- Project URL and API keys stored in environment variables
+- Client initialized in src/integrations/supabase/client.ts
+- Uses @supabase/supabase-js v2.75.0
+
+DATABASE SCHEMA (supabase/schema.sql):
+-------------------------------------
+
+1. PROFILES TABLE:
+   - id (uuid, references auth.users)
+   - full_name (text)
+   - avatar_url (text)
+   - created_at, updated_at (timestamptz)
+   - Auto-created on user signup via trigger
+
+2. FARMS TABLE:
+   - id (uuid, primary key)
+   - user_id (uuid, references auth.users)
+   - name (text, required)
+   - location (jsonb: {country, state, localGovernment})
+   - size (numeric)
+   - size_unit (text, default 'hectares')
+   - soil_type (text)
+   - crops (text[])
+   - created_at, updated_at (timestamptz)
+
+3. SAVED_PLANS TABLE:
+   - id (uuid, primary key)
+   - user_id (uuid, references auth.users)
+   - plan_type (text: 'crop'/'soil'/'water'/'market'/'pest'/'fertilizer')
+   - plan_name (text)
+   - plan_data (jsonb)
+   - location (jsonb)
+   - created_at (timestamptz)
+
+4. COMPREHENSIVE_PLANS TABLE:
+   - id (uuid, primary key)
+   - user_id (uuid, references auth.users)
+   - plan_data (jsonb)
+   - location (jsonb)
+   - farm_size (numeric)
+   - created_at (timestamptz)
+
+5. MARKET_PRICES TABLE:
+   - id (uuid, primary key)
+   - crop_name (text)
+   - state (text)
+   - market_name (text)
+   - price (numeric)
+   - unit (text, default 'per kg')
+   - source (text)
+   - recorded_at, created_at (timestamptz)
+   - Public read access (no auth required)
+
+6. AGRICULTURAL_NEWS TABLE:
+   - id (uuid, primary key)
+   - title, content, source, url (text)
+   - published_at, created_at (timestamptz)
+   - Public read access
+
+ROW LEVEL SECURITY (RLS):
+------------------------
+All tables have RLS enabled with policies:
+- Users can only view/create/update/delete their own data
+- Market prices and agricultural news are publicly readable
+- Service role key used in edge functions for admin operations
+
+AUTHENTICATION:
+--------------
+- useAuth hook (src/hooks/useAuth.tsx) manages auth state
+- Listens to onAuthStateChange events
+- Provides user, session, loading, and signOut function
+- ProtectedRoute component redirects unauthenticated users to /auth
+
+
+================================================================================
+                        AI FUNCTIONS ANALYSIS
+================================================================================
+
+All AI functions are Supabase Edge Functions (Deno runtime) located in:
+supabase/functions/
+
+Common Pattern for ALL Functions:
+---------------------------------
+1. CORS headers for cross-origin requests
+2. Authentication check (Bearer token from Authorization header)
+3. Input validation using Zod schemas
+4. API call to Google Gemini 2.0 Flash
+5. JSON response parsing and cleanup
+6. Error handling with proper HTTP status codes
+
+API ENDPOINT: 
+https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+
+CONFIGURATION:
+- temperature: 0.7 (balanced creativity/accuracy)
+- maxOutputTokens: 8192
+
+
+--------------------------------------------------------------------------------
+1. ANALYZE-CROP FUNCTION
+--------------------------------------------------------------------------------
+Location: supabase/functions/analyze-crop/index.ts
+
+INPUT SCHEMA:
+{
+  location: { country, state, localGovernment },
+  soilType: string,
+  cropType: string,
+  farmSize: number (0.1 - 10000)
+}
+
+SYSTEM PROMPT:
+"You are an expert agricultural AI assistant with access to data from FAO, 
+CGIAR, national agricultural departments, NASA POWER, and NOAA NCEI. Analyze 
+crop suitability and provide comprehensive, data-rich recommendations with 
+cited sources."
+
+USER PROMPT STRUCTURE:
+Includes location, soil type, desired crop, farm size.
+Requests:
+- Tool to check if crop is valid first
+- Recommended crops with suitability scores (3-5 crops)
+- Yield potential analysis
+- Climate analysis for specific location
+- Monthly climate data for all 12 months
+- Climate recommendations
+- Pest risk analysis
+- Data sources with URLs
+
+EXPECTED JSON OUTPUT KEYS:
+- recommendedCrops (array with name, suitability, season, planting/harvest 
+  windows, water requirement, expected yield, market demand, profit potential)
+- yieldPotential (expected, average per acre, confidence, historical/optimistic/
+  conservative yields)
+- climateAnalysis (text with NASA/NOAA data)
+- monthlyData (12 months: rainfall, temperature, ideal for planting flag)
+- climateRecommendations (array with source and confidence)
+- soilHealthScore
+- recommendations (category, priority, action, timeframe, cost estimate)
+- pestRiskAnalysis (pest name, risk level, preventive measures)
+- dataSources (FAO, CGIAR, NASA POWER, NOAA NCEI URLs)
+- error (if crop type is invalid)
+
+
+--------------------------------------------------------------------------------
+2. ANALYZE-SOIL FUNCTION
+--------------------------------------------------------------------------------
+Location: supabase/functions/analyze-soil/index.ts
+
+INPUT SCHEMA:
+{
+  color: string,
+  texture: string,
+  notes: string (optional),
+  imageBase64: string (optional),
+  soilPH: string (optional),
+  soilCompactness: string (optional)
+}
+
+VISION MODEL SUPPORT:
+If imageBase64 is provided, sends image as inlineData to Gemini vision model.
+Base64 is extracted from data URL if needed.
+
+SYSTEM PROMPT:
+"You are an expert soil scientist and agricultural consultant with access to 
+data from FAO, CGIAR, USDA, and agricultural research institutions."
+
+USER PROMPT (WITH IMAGE):
+Requests health assessment, pH level, organic matter, drainage quality, 
+nutrient status (N-P-K, calcium, magnesium, sulfur), amendments, crop rotation, 
+implementation timeline, micronutrients, irrigation recommendations.
+
+USER PROMPT (TEXT-ONLY):
+Requests health score, moisture level, natural amendments, crop rotation 
+suggestions, irrigation recommendations, climate recommendations.
+
+EXPECTED JSON OUTPUT KEYS:
+- summary
+- healthAssessment (overallHealth, pHLevel, organicMatter, drainageQuality, 
+  soilStructure, healthScore)
+- nutrientStatus
+- nutrientChart (for bar chart visualization)
+- amendments (name, purpose, application, quantity, cost, priority)
+- cropRotation
+- timeline (period, action, expected improvement)
+- micronutrients
+- irrigationRecommendations
+- climateRecommendations
+- expectedImprovementTimeline (for line chart)
+- dataSources
+
+
+--------------------------------------------------------------------------------
+3. ANALYZE-WATER FUNCTION
+--------------------------------------------------------------------------------
+Location: supabase/functions/analyze-water/index.ts
+
+INPUT SCHEMA:
+{
+  waterSource: string,
+  farmSize: number,
+  cropTypes: string[],
+  irrigationMethod: string,
+  location: { country, state }
+}
+
+CURRENCY MAPPING:
+Determines local currency based on country (₦ for Nigeria, KSh for Kenya, etc.)
+
+SYSTEM PROMPT:
+"You are an expert in agricultural water management with access to NASA POWER 
+and NOAA NCEI climate data."
+
+USER PROMPT STRUCTURE:
+Requests usage breakdown, rain predictions (24h, 7 days, 30 days), climate-based 
+irrigation schedule, optimization strategies, monthly projections for charts.
+
+EXPECTED JSON OUTPUT KEYS:
+- summary
+- currentUsage (daily, monthly, yearly, efficiency %, cost, waste %)
+- usageBreakdown
+- rainPredictions (24h, 7 days, 30 days with irrigation advice)
+- climateBasedSchedule (date, action, source)
+- optimizationStrategies (name, savings %, description, implementation, cost, 
+  ROI, priority)
+- irrigationSchedule (crop, frequency, timing, duration, water amount, season)
+- monthlyProjection (12 months with current vs optimized usage)
+- weatherIntegration
+- systemUpgrades
+- waterQuality
+- recommendations
+- dataSources
+
+
+--------------------------------------------------------------------------------
+4. ANALYZE-FERTILIZER FUNCTION
+--------------------------------------------------------------------------------
+Location: supabase/functions/analyze-fertilizer/index.ts
+
+INPUT SCHEMA:
+{
+  cropType: string,
+  farmSize: number,
+  plantingMonth: string,
+  location: { country, state, localGovernment },
+  soilData: { pH, nitrogen, phosphorus, potassium, organicMatter } (optional)
+}
+
+CURRENCY MAPPING:
+Same as water function - determines local currency.
+
+SOIL DATA INTEGRATION:
+If soil test data provided, adjusts recommendations accordingly.
+Otherwise, bases on typical requirements for crop/region.
+
+SYSTEM PROMPT:
+"You are an expert agricultural scientist specializing in soil fertility and 
+fertilizer management in Africa. Provide region-specific, cost-effective 
+fertilizer recommendations."
+
+USER PROMPT STRUCTURE:
+Farm details including optional soil test results.
+Requests fertilizer plan with basal application, top dressing schedule, 
+organic alternatives, cost analysis, yield projections.
+
+EXPECTED JSON OUTPUT KEYS:
+- cropNutrientRequirements (N-P-K, secondary, micronutrients)
+- fertilizerPlan:
+  - basalApplication (timing, fertilizers with type/quantity/cost/method)
+  - topDressing (array by crop stage)
+- organicAlternatives (compost, animal manure, green manure, bio-fertilizers)
+- costAnalysis (inorganic, organic, hybrid approach)
+- applicationGuidelines (soil testing, weather, safety, storage)
+- yieldProjection (with/without fertilization, % increase)
+- regionalConsiderations (availability, suppliers, subsidies)
+- resources
+
+
+--------------------------------------------------------------------------------
+5. IDENTIFY-PEST FUNCTION
+--------------------------------------------------------------------------------
+Location: supabase/functions/identify-pest/index.ts
+
+INPUT SCHEMA:
+{
+  cropType: string,
+  symptoms: string[] (1-20 items),
+  location: { country, state, localGovernment }
+}
+
+SYSTEM PROMPT:
+"You are an expert agricultural pathologist and entomologist specializing in 
+African crop diseases and pests. Provide accurate diagnoses based on symptoms 
+and recommend treatments using locally available, affordable resources."
+
+USER PROMPT STRUCTURE:
+Diagnose pest/disease for specific crop with listed symptoms.
+Focus on practical, affordable solutions for African farmers.
+
+EXPECTED JSON OUTPUT KEYS:
+- diagnosis:
+  - primary (name, scientificName, confidence, description)
+  - alternatives (array)
+- symptoms (observed, expected)
+- causes (primary, contributing factors)
+- treatment:
+  - immediate (action, materials, cost, effectiveness)
+  - preventive (measure, timing, frequency)
+  - organic (array)
+  - chemical (product, dosage, safety)
+- lifecycle (stages, duration, spread rate)
+- economicImpact (potential loss, treatment cost, yield impact)
+- resources
+- expertAdvice
+
+JSON CLEANUP:
+Strips markdown code blocks (```json) from response.
+Validates JSON parsing before returning.
+
+
+--------------------------------------------------------------------------------
+6. ESTIMATE-MARKET-PRICE FUNCTION
+--------------------------------------------------------------------------------
+Location: supabase/functions/estimate-market-price/index.ts
+
+INPUT SCHEMA:
+{
+  cropType: string,
+  expectedYield: number (optional),
+  yieldUnit: string (optional),
+  farmSize: number,
+  location: { country, state, localGovernment },
+  harvestDate: string
+}
+
+SPECIAL FEATURE - HISTORICAL DATA QUERY:
+Queries market_prices table using fuzzy search (ILIKE %cropType%).
+Filters by state, orders by date (most recent first), limits to 2000 records.
+Calculates statistics: latest price, average, min, max.
+Groups by food item varieties.
+
+SYSTEM PROMPT:
+"You are an expert agricultural economist and market analyst with deep 
+expertise in price forecasting and trend analysis."
+
+CORE PRINCIPLES EMPHASIZED:
+1. Analyze trends and patterns to make FORWARD-LOOKING predictions
+2. Identify seasonal cycles, supply-demand dynamics
+3. Synthesize multiple data sources
+4. Provide actionable insights and strategic recommendations
+5. Explain reasoning and confidence levels
+
+USER PROMPT STRUCTURE:
+Includes historical data context with:
+- Crop varieties found in database
+- Recent price samples (last 20 records)
+- Statistical analysis
+- Task to analyze trends, not just report last price
+
+EXPECTED JSON OUTPUT KEYS:
+- summary
+- priceEstimate (low, average, high, forecast accuracy, total revenue, 
+  price per ton, trend direction, confidence level)
+- historicalPrices (12 months for chart)
+- marketTrends (factors with impact, trend direction, confidence)
+- demandAnalysis (current demand, seasonal pattern, competition, supply gap)
+- seasonalClimateImpact (harvest weather, storage conditions, transport)
+- priceForecast (by period with climate factors)
+- sellingStrategy
+- marketChannels (channel, price range, volume, payment terms, recommendation)
+- riskFactors (risk, probability, impact, mitigation)
+- profitabilityAnalysis (gross revenue, costs, net profit, margin, break-even)
+- dataSources
+
+RETRY LOGIC:
+Implements exponential backoff (1s, 2s, 4s) with 3 max retries.
+Handles rate limiting (429) gracefully.
+
+
+--------------------------------------------------------------------------------
+7. GENERATE-COMPREHENSIVE-PLAN FUNCTION
+--------------------------------------------------------------------------------
+Location: supabase/functions/generate-comprehensive-plan/index.ts
+
+INPUT SCHEMA:
+{
+  farmData: {
+    farm_name, location, total_size, soil_type, water_source,
+    irrigation_method, crops[]
+  },
+  preferredPlantingDate: string,
+  climateData: any (from get-climate-data),
+  includeSections: { crop, soil, water, market }
+}
+
+CRITICAL PRIORITIES (emphasized in system prompt):
+1. PROFITABILITY: Recommend crops that maximize farmer income
+2. SUSTAINABILITY: Environmental best practices
+3. MARKET ANALYSIS: Base on demand, pricing trends, ROI
+4. CROP ROTATION: Maintain soil health, prevent nutrient depletion
+5. ENVIRONMENTAL FRIENDLINESS: Reduce environmental impact
+
+SYSTEM PROMPT:
+"You are an expert agricultural consultant providing comprehensive farm 
+planning with a focus on profitability and sustainability."
+
+USER PROMPT:
+Provides full farm details, climate data, and sections to include.
+
+EXPECTED JSON OUTPUT STRUCTURE:
+- executiveSummary (overview, keyRecommendations, expectedOutcomes)
+- climaticAnalysis (currentConditions, seasonalPattern, optimalPlantingWindow, 
+  weatherRisks, recommendations, dataSources)
+- cropManagement:
+  - profitabilityAnalysis (summary, marketTrends, reasoning)
+  - recommendedCrops (crop, variety, dates, yield, marketValue, projected 
+    revenue, profit margin, market demand, sustainability score, rotation 
+    benefit)
+  - cropRotation (multi-season plan with benefits)
+  - sustainability (practices, environmental benefits, viability)
+  - intercropping (combinations, benefits, profitability)
+- soilManagement (analysis, nutrients, amendments, conservation)
+- waterManagement (irrigation schedule, water budget, conservation)
+- pestDiseaseManagement (common threats, IPM strategy, monitoring)
+- marketStrategy:
+  - priceAnalysis (current prices, historical/forecast trends, best selling 
+    time, competitive advantage)
+  - profitMaximization (highest revenue crops, quickest return, balanced 
+    approach)
+  - valueAddition (processing methods, price increase %)
+  - marketAccess, riskDiversification
+- financialProjection (startup, operational, revenue scenarios, profitability)
+- timeline (phases with dates, activities, milestones)
+- riskManagement (identified risks, contingency plans)
+- resources
+- charts (monthlyWaterUsage, cropCalendar, financialProjection)
+
+RETRY & FALLBACK LOGIC:
+- 3 retries with exponential backoff
+- On failure, attempts to return previous plan from database
+- Saves successful plans to comprehensive_plans table
+
+DATABASE SAVE FIELDS:
+user_id, farm_id, plan_name, included_sections, preferred_planting_date,
+climate_data, comprehensive_summary, optimal_planting_window, crop_analysis,
+soil_analysis, water_analysis, market_analysis
+
+
+--------------------------------------------------------------------------------
+8. GET-CLIMATE-DATA FUNCTION
+--------------------------------------------------------------------------------
+Location: supabase/functions/get-climate-data/index.ts
+
+Fetches climate data for a location and date range.
+Used as first step before generating comprehensive plan.
+
+INPUT: latitude, longitude, startDate, endDate
+
+OUTPUT: Climate analysis including current conditions, forecasts, seasonal 
+patterns from NASA POWER and NOAA NCEI data sources.
+
+
+--------------------------------------------------------------------------------
+9. FETCH-AGRICULTURE-NEWS FUNCTION
+--------------------------------------------------------------------------------
+Location: supabase/functions/fetch-agriculture-news/index.ts
+
+Fetches latest agricultural news and stores in agricultural_news table.
+
+
+--------------------------------------------------------------------------------
+10. FETCH-NBS-DATA FUNCTION
+--------------------------------------------------------------------------------
+Location: supabase/functions/fetch-nbs-data/index.ts
+
+Fetches National Bureau of Statistics data for market prices.
+
+
+--------------------------------------------------------------------------------
+11. BULK-INSERT-MARKET-PRICES FUNCTION
+--------------------------------------------------------------------------------
+Location: supabase/functions/bulk-insert-market-prices/index.ts
+
+Bulk inserts market price data into market_prices table.
+
+
+--------------------------------------------------------------------------------
+12. _SHARED FOLDER
+--------------------------------------------------------------------------------
+Location: supabase/functions/_shared/
+
+Contains shared utilities and CORS headers used across all functions.
+
+
+================================================================================
+                        AI PROMPT ENGINEERING SUMMARY
+================================================================================
+
+PROMPT STRUCTURE PATTERN:
+-------------------------
+Every AI function follows this pattern:
+
+1. SYSTEM PROMPT: Establishes AI's role and expertise
+   - Domain expertise (soil scientist, market analyst, etc.)
+   - Data sources it has access to (FAO, NASA, CGIAR, etc.)
+   - Output format requirements (JSON)
+   - Regional focus (Africa-specific when applicable)
+
+2. USER PROMPT: Contains the actual request
+   - Input data from user (location, crop, etc.)
+   - Specific fields requested with exact JSON keys
+   - Sample data structure for expected output
+   - Special instructions (validation, error handling)
+
+3. GENERATION CONFIG:
+   - temperature: 0.7 (balanced)
+   - maxOutputTokens: 8192 (maximum context)
+
+4. RESPONSE HANDLING:
+   - Strip markdown code blocks (```json)
+   - Parse JSON
+   - Validate structure
+   - Return with CORS headers
+
+CURRENCY LOCALIZATION:
+---------------------
+Functions that involve costs use a currency mapping:
+- Nigeria: ₦
+- Kenya: KSh
+- Ghana: ₵
+- South Africa: R
+- Tanzania: TSh
+- Uganda: USh
+- Ethiopia: Br
+- Default: $
+
+DATA SOURCE CITATIONS:
+---------------------
+All functions require citing reputable sources:
+- FAO (http://www.fao.org/)
+- CGIAR (https://www.cgiar.org/)
+- NASA POWER (https://power.larc.nasa.gov/)
+- NOAA NCEI (https://www.ncei.noaa.gov/)
+- USDA (https://www.usda.gov/)
+- National agricultural departments
+
+
+================================================================================
+                           SUPPORTING INFRASTRUCTURE
+================================================================================
+
+HOOKS:
+------
+- useAuth.tsx: Authentication state management
+- use-toast.ts: Toast notification system
+- use-mobile.tsx: Mobile detection hook
+
+CONTEXTS:
+---------
+- FarmDataContext.tsx: Shares farm data across tools
+
+INTERNATIONALIZATION (i18n):
+---------------------------
+Location: src/i18n/
+Supports multiple languages with translation files.
+
+UTILITIES:
+----------
+- lib/imageUtils.ts: Image compression for soil analysis
+- lib/utils.ts: General utility functions (cn for classnames)
+
+INTEGRATIONS:
+-------------
+- supabase/client.ts: Supabase client configuration
+- supabase/types.ts: TypeScript types for database schema
+
+
+================================================================================
+                              SUMMARY
+================================================================================
+
+YieldPlus.AI is a comprehensive AI-powered agricultural platform that:
+
+1. PROVIDES 6+ specialized AI tools for crop planning, soil analysis, water 
+   management, pest identification, fertilizer optimization, and market pricing
+
+2. USES Google Gemini 2.0 Flash API for all AI analysis with sophisticated 
+   prompt engineering that includes role-based expertise, data source citations, 
+   regional customization, and structured JSON outputs
+
+3. STORES user data in Supabase PostgreSQL with proper RLS security
+
+4. SUPPORTS multiple African countries with localized currency and regional 
+   agricultural knowledge
+
+5. FEATURES a modern React/TypeScript frontend with responsive design, 
+   animations, and comprehensive data visualization through charts
+
+6. INTEGRATES historical market data from the database to enhance AI predictions
+
+7. IMPLEMENTS comprehensive error handling, retry logic with exponential 
+   backoff, and fallback to cached data when AI services are unavailable
+
+================================================================================

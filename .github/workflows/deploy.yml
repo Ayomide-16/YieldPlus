@@ -29,6 +29,9 @@ jobs:
       - name: Build project
         run: pnpm run build
 
+      - name: Copy .htaccess to dist
+        run: cp deploy/.htaccess dist/.htaccess
+
       - name: Deploy to cPanel via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:

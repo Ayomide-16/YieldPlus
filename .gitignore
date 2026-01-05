@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Mobile App - Separate Repository
+YieldPlus Mobile App/
