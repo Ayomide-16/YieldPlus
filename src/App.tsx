@@ -24,6 +24,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { FarmDataProvider } from "./contexts/FarmDataContext";
+import FarmCreationWizard from "./components/FarmCreationWizard";
+import ActiveFarmDashboard from "./components/ActiveFarmDashboard";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +71,8 @@ const AppLayout = () => {
               <Route path="/my-plans" element={<ProtectedRoute><MyPlans /></ProtectedRoute>} />
               <Route path="/my-farms" element={<ProtectedRoute><MyFarms /></ProtectedRoute>} />
               <Route path="/market-tools" element={<ProtectedRoute><MarketTools /></ProtectedRoute>} />
+              <Route path="/create-farm" element={<ProtectedRoute><FarmCreationWizard /></ProtectedRoute>} />
+              <Route path="/farm/:farmId" element={<ProtectedRoute><ActiveFarmDashboard /></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
