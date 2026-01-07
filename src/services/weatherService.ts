@@ -244,7 +244,7 @@ export async function fetchForecast(
         const data = await response.json();
 
         // Group by date and aggregate
-        const dailyMap = new Map<string, any[]>();
+        const dailyMap = new Map<string, Array<{ dt_txt: string; main: { temp: number; humidity: number }; weather: Array<{ main: string; description: string; icon: string }>; pop?: number; rain?: { '3h'?: number }; wind: { speed: number } }>>();
 
         for (const item of data.list) {
             const date = item.dt_txt.split(' ')[0];
@@ -371,7 +371,7 @@ export async function fetchClimateData(
 /**
  * Check if result is an error
  */
-export function isWeatherError(result: any): result is WeatherError {
+export function isWeatherError(result: CurrentWeather | Forecast | ClimateData | WeatherError): result is WeatherError {
     return 'error' in result && 'code' in result;
 }
 

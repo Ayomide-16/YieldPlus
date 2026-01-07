@@ -1,11 +1,6 @@
 import { createRoot } from "react-dom/client";
-import { FarmDataProvider } from "./contexts/FarmDataContext";
-import App from "./App.tsx";
 import "./index.css";
 import "./i18n/config";
+import App from "./App.tsx";
 
-createRoot(document.getElementById("root")!).render(
-  <FarmDataProvider>
-    <App />
-  </FarmDataProvider>
-);
+createRoot(document.getElementById("root")!).render(<App />);

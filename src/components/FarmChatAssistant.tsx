@@ -14,8 +14,6 @@ import {
     Loader2,
     Bot,
     User,
-    Sprout,
-    Sparkles,
     HelpCircle
 } from 'lucide-react';
 
@@ -103,11 +101,6 @@ export const FarmChatAssistant: React.FC<FarmChatAssistantProps> = ({
 
         try {
             // Build context for AI
-            let systemPrompt = `You are a helpful farming assistant for Nigerian farmers. 
-Provide practical, actionable advice in simple language.
-Focus on local conditions and affordable solutions.
-Keep responses concise but helpful.`;
-
             let context = '';
 
             if (farm) {
@@ -127,8 +120,6 @@ FARM CONTEXT:
 
 Answer the farmer's question using this context. Be specific to their situation.`;
             }
-
-            const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
             // Use edge function for chat
             const { data, error } = await supabase.functions.invoke('chat-with-context', {
@@ -219,8 +210,8 @@ Answer the farmer's question using this context. Be specific to their situation.
                                     )}
 
                                     <div className={`max-w-[80%] rounded-lg px-3 py-2 ${message.role === 'user'
-                                            ? 'bg-green-600 text-white'
-                                            : 'bg-muted'
+                                        ? 'bg-green-600 text-white'
+                                        : 'bg-muted'
                                         }`}>
                                         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                                     </div>

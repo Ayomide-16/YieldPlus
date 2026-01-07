@@ -24,6 +24,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { FarmDataProvider } from "./contexts/FarmDataContext";
+// Lifecycle components
 import FarmCreationWizard from "./components/FarmCreationWizard";
 import ActiveFarmDashboard from "./components/ActiveFarmDashboard";
 

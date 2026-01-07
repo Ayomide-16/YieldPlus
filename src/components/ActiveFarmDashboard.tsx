@@ -181,9 +181,9 @@ export function ActiveFarmDashboard() {
     const totalDays = harvestDate ? Math.floor((harvestDate.getTime() - plantingDate.getTime()) / (1000 * 60 * 60 * 24)) : 90;
     const progressPercent = Math.min(100, Math.max(0, (daysSincePlanting / totalDays) * 100));
 
-    const weather = dailyRec?.weather_data as any;
+    const weather = dailyRec?.weather_data as Record<string, unknown> | undefined;
     const recommendations = (dailyRec?.recommendations || []) as Recommendation[];
-    const farmStatus = dailyRec?.farm_status as any;
+    const farmStatus = dailyRec?.farm_status as Record<string, unknown> | undefined;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-green-50/50 via-white to-emerald-50/50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
@@ -293,11 +293,11 @@ export function ActiveFarmDashboard() {
                                                 </div>
                                             </div>
                                             {/* 3-day forecast */}
-                                            {weather.forecast?.slice(0, 3).length > 0 && (
+                                            {weather.forecast && weather.forecast.length > 0 && (
                                                 <div className="border-t pt-3 mt-3">
                                                     <p className="text-xs text-muted-foreground mb-2">3-Day Forecast</p>
                                                     <div className="grid grid-cols-3 gap-2">
-                                                        {weather.forecast.slice(0, 3).map((day: any, idx: number) => (
+                                                        {weather.forecast.slice(0, 3).map((day: { date: string; temperatureHigh: number; rainfallProbability: number }, idx: number) => (
                                                             <div key={idx} className="text-center text-xs">
                                                                 <p className="font-medium">
                                                                     {new Date(day.date).toLocaleDateString('en', { weekday: 'short' })}

@@ -369,7 +369,7 @@ export function FarmCreationWizard() {
                             <Select
                                 value={farmData.soil_profile?.type || ''}
                                 onValueChange={(type) => updateFarmData({
-                                    soil_profile: { ...farmData.soil_profile, type } as any
+                                    soil_profile: { ...(farmData.soil_profile || { type: '', pH: null, color: '', texture: '' }), type }
                                 })}
                             >
                                 <SelectTrigger className="mt-1">
@@ -492,8 +492,8 @@ export function FarmCreationWizard() {
                             </div>
                             {index < STEPS.length - 1 && (
                                 <div className={`h-1 w-8 md:w-16 mx-2 ${currentStep > step.id
-                                        ? 'bg-green-500'
-                                        : 'bg-gray-200 dark:bg-gray-700'
+                                    ? 'bg-green-500'
+                                    : 'bg-gray-200 dark:bg-gray-700'
                                     }`} />
                             )}
                         </div>
